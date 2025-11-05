@@ -19,7 +19,7 @@
     "@trpc/tanstack-react-query": "^11.5.1",
     "db-hafas-stations": "^2.0.0",
     "db-vendo-client": "^6.10.5",
-    "next": "15.5.4",
+    "next": "16.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "superjson": "^2.2.5"
