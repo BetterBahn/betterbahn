@@ -1,8 +1,6 @@
-import { Navbar } from "@/components/Layout/Navbar";
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import type { ReactNode } from "react";
 import "./globals.css";
-import { TRPCReactProvider } from "@/utils/TRPCProvider";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -14,22 +12,23 @@ const geistMono = Geist_Mono({
 	subsets: ["latin"],
 });
 
-export const metadata = {
-	title: "Better Bahn - Split-Ticketing",
-	description: "Eine App von Lukas Weihrauch",
+export const metadata: Metadata = {
+	title: "BetterBahn - PWA",
+	description: "Eine Progressive Web App für BetterBahn",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+	children,
+}: Readonly<{
+	children: React.ReactNode;
+}>) {
 	return (
-		<TRPCReactProvider>
-			<html lang="de">
-				<body
-					className={`${geistSans.variable} ${geistMono.variable} antialiased container mx-auto px-2 py-6`}
-				>
-					<Navbar />
-					{children}
-				</body>
-			</html>
-		</TRPCReactProvider>
+		<html lang="de">
+			<body
+				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+			>
+				{children}
+			</body>
+		</html>
 	);
 }

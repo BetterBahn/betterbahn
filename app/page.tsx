@@ -1,13 +1,9 @@
-"use client";
-
-import { Hero } from "@/components/Layout/Hero";
-import { SearchForm } from "@/components/SearchForm/SearchForm";
+import Image from "next/image";
 
 export default function Home() {
 	return (
-		<>
-			<Hero />
-			<SearchForm />
-		</>
+		<main className="flex h-screen flex-col items-center justify-center">
+			<h1>BetterBahn</h1>
+		</main>
 	);
 }

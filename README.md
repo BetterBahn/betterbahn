@@ -1,93 +1,40 @@
-# BetterBahn
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-BetterBahn is a web app for finding the best train journeys in Germany. While split ticketing is supported to help save money, it is rather the exception. The app will be extended with many more features in the future.
-You can find out more about the project on our [website](https://betterbahn.de).
+## About This Branch
 
-## Technology
-
-This project uses the [db-vendo-client](https://github.com/public-transport/db-vendo-client) for accessing Deutsche Bahn ticketing data, which is licensed under the ISC License.
-
-## Legal Notice
-
-This is not an official repository or project of Deutsche Bahn AG. It is an independent project and not affiliated with or endorsed by Deutsche Bahn. To use this code or the db-vendo-client permission from the Deutsche Bahn AG is necessary.
+This is a feature branch to test the possibilities of using BetterBahn as a statically generated website with PWA (Progressive Web App) capabilities.
 
 ## Getting Started
 
-### Prerequisites
+First, run the development server:
 
-- [Node.js](https://nodejs.org/en/)
-- [pnpm](https://pnpm.io/) (see below for installation)
-- [git](https://git-scm.com/)
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-### To run the project locally
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. Clone the repository and navigate to the folder
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-   ```shell
-   git clone https://github.com/l2xu/betterbahn.git
-   cd betterbahn
-   ```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-2. Install dependencies with `pnpm install`
+## Learn More
 
-   You can install pnpm via corepack (included with Node.js):
+To learn more about Next.js, take a look at the following resources:
 
-   ```shell
-   corepack enable
-   corepack prepare pnpm@latest --activate
-   ```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-   or via npm:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-   ```shell
-   npm install -g pnpm@latest-10
-   ```
+## Deploy on Vercel
 
-   then run `pnpm install` in the project directory.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-3. Start the development server with `pnpm run dev` and navigate to `http://localhost:3000` in your browser.
-
-## Docker
-
-You can also build and run BetterBahn as a Docker container. A `Dockerfile` is included in the repository.
-
-## Docker Compose
-
-You can run the app with docker compose:
-
-### Default/Development
-
-`docker compose -f docker-compose/docker-compose.yaml --project-directory=./ up -d`
-
-<http://localhost:3000>
-
-## Installation Guides
-
-For detailed installation instructions on different platforms:
-
-- [Windows Installation (DE)](docs/Windows-Installation-de.md)
-- [Linux Installation (DE)](docs/Linux-Installation-de.md)
-- [Windows Installation (EN)](docs/Windows-Installation-en.md)
-- [Linux Installation (EN)](docs/Linux-Installation-en.md)
-
-## License
-
-This project is licensed under the AGPL-3.0-only. See the [LICENSE](./LICENSE) file for details.
-
-## Community and Contribution
-
-Join the [Discord community](https://discord.gg/9pFXzs6XRK) to ask questions, share feedback, and connect with other users and contributors.
-
-Want to contribute? Please read the [Code of Conduct](/CODE_OF_CONDUCT.md) and see the [Contributing Guide](/CONTRIBUTE.md) for details on how to get started.
-
-## How it works
-
-BetterBahn searches for train journeys and can use split ticketing to help you find cheaper options—though this is usually the exception, not the rule. For a detailed explanation and demonstration, check out the [YouTube video](https://www.youtube.com/watch?v=SxKtI8f5QTU).
-
-## About the Author
-
-Created by [Lukas Weihrauch](https://lukasweihrauch.de).
-
----
-
-Made with ❤️ for train travelers in Germany.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

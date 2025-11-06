@@ -1,45 +1,26 @@
 {
-  "name": "db_ticket",
+  "name": "betterbahn_pwa",
   "version": "0.1.0",
   "private": true,
-  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "deploy": "docker build",
-    "oxlint": "oxlint"
+    "lint": "eslint"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.6",
-    "@trpc/client": "^11.5.1",
-    "@trpc/next": "^11.5.1",
-    "@trpc/react-query": "^11.5.1",
-    "@trpc/server": "^11.5.1",
-    "@trpc/tanstack-react-query": "^11.5.1",
-    "db-hafas-stations": "^2.0.0",
-    "db-vendo-client": "^6.10.5",
-    "next": "15.5.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "superjson": "^2.2.5"
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "next": "16.0.1"
   },
   "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "24.9.2",
-    "@types/react": "^19.1.11",
-    "@types/react-dom": "^19.1.8",
-    "oxlint": "^1.22.0",
     "tailwindcss": "^4",
-    "typescript": "^5.9.3",
-    "zod": "^4.1.12"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "10.15.0",
-      "onFail": "download"
-    }
-  },
-  "packageManager": "pnpm@10.19.0"
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1"
+  }
 }
