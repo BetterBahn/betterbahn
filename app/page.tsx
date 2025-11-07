@@ -1,9 +1,8 @@
-import Image from "next/image";
-
+import SearchForm from "@/app/components/search/searchForm";
 export default function Home() {
 	return (
 		<main className="flex h-screen flex-col items-center justify-center">
-			<h1>BetterBahn</h1>
+			<SearchForm />
 		</main>
 	);
 }
