@@ -1,38 +1,100 @@
-## About This Branch
+# BetterBahn – PWA Branch
 
-This feature branch is designed to explore the potential of using BetterBahn as a statically generated website with Progressive Web App (PWA) capabilities and client-side data fetching. The application utilizes the [v6.db.transport.rest API](https://v6.db.transport.rest/api.html) to retrieve data on the client side.
+BetterBahn is an open-source web app that helps you find comfortable and affordable train connections in Germany – featuring split-ticketing and a modern PWA interface.
+
+With the new approach, we focus on a simple, low-maintenance, and fully client-side solution that works across all devices – without the need for a custom backend or server infrastructure.
+
+---
+
+## New Approach
+
+Instead of fetching data via the `db-vendo-client`, we now use the public [transport.rest API (v6)](https://v6.db.transport.rest/).
+
+This change brings several benefits:
+
+- No dedicated server or proxy required
+- Static, client-side architecture (Next.js + Static Export)
+- Works as a Progressive Web App (PWA) on both desktop and mobile
+- Easy deployment on GitHub Pages, Vercel, or any standard web host
+
+---
+
+## Current Focus
+
+### Connection Search
+
+- Optimize search logic and performance
+- Store recurring traveler data (e.g., name, BahnCard) using cookies
+- Add advanced options like arrival time, time window, or transport type filters
+- Improve station search by caching results to reduce unnecessary API calls
+
+### Split Ticketing
+
+- Rebuild and improve the split-ticketing feature
+- Compare different algorithms for better price optimization
+- Optional “risk assessment” modes:
+  - Only consider splits without transfers
+  - Or include splits with transfers (for experienced travelers)
+
+### Additional Features
+
+- Implement an overbooking feature to simulate sold-out connections
+- Integrate more transport providers through [transport.rest](https://transport.rest/)
+- Allow community-created adapters for regional transport associations
+
+### UI / UX and PWA
+
+- Full PWA functionality (offline support, installable as app)
+- Modern, responsive interface
+- Light and dark mode
+- Smooth animations and user-centered design
+
+---
+
+## Technology
+
+- Next.js with static export (`next export`)
+- [transport.rest API (v6)](https://v6.db.transport.rest/) as the main data source
+- TypeScript, React Hooks, TailwindCSS
+- npm as the package manager
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Clone the repository
+git clone [https://github.com/l2xu/betterbahn.git](https://github.com/l2xu/betterbahn.git)
+cd betterbahn
+
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The project will be available at http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To generate a static export:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run export
+```
 
-## Learn More
+The output will be located in the /out directory and can be deployed to any web server or CDN.
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project is licensed under the AGPL-3.0-only. See the [LICENSE](https://github.com/BetterBahn/betterbahn/blob/main/LICENSE) file for details.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Community and Contribution
 
-## Deploy on Vercel
+Join the [Discord community](https://discord.gg/9pFXzs6XRK) to ask questions, share feedback, and connect with other users and contributors.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Want to contribute? Please read the [Code of Conduct](/https://github.com/BetterBahn/betterbahn/blob/main/CODE_OF_CONDUCT.md) and see the [Contributing Guide](/https://github.com/BetterBahn/betterbahn/blob/main/CONTRIBUTE.md) for details on how to get started.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+Made with ❤️ for train travelers in Germany.
