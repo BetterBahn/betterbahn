@@ -44,7 +44,12 @@ export default function SearchForm() {
 		// Date/Time - if provided, use departure, otherwise use current time
 		const dateTime = formData.get("dateTime") as string;
 		if (dateTime) {
-			params.append("departure", dateTime);
+			// Convert the datetime-local input to ISO 8601 format with timezone
+			// datetime-local gives us "YYYY-MM-DDTHH:mm" in local time
+			// We need to convert it to ISO 8601 with timezone info
+			const localDate = new Date(dateTime);
+			const isoDateTime = localDate.toISOString();
+			params.append("departure", isoDateTime);
 		}
 
 		// Optional parameters

@@ -17,7 +17,7 @@ export function useJourneySearch() {
 		departure: urlSearchParams.get("departure") || undefined,
 		age: urlSearchParams.get("age") || undefined,
 		deutschlandTicketDiscount:
-			urlSearchParams.get("deutschlandTicket.discount") === "true",
+			urlSearchParams.get("deutschlandTicketDiscount") === "true",
 		firstClass: urlSearchParams.get("firstClass") === "true",
 		loyaltyCard: urlSearchParams.get("loyaltyCard") || undefined,
 		tickets: true,
@@ -40,6 +40,7 @@ export function useJourneySearch() {
 				// Build the API URL with all search params, and add stopovers=true to get intermediate stations
 				const params = new URLSearchParams(urlSearchParams.toString());
 				params.set("stopovers", "true");
+				params.set("tickets", "true"); // Always get ticket prices
 				const apiUrl = `https://v6.db.transport.rest/journeys?${params.toString()}`;
 
 				const response = await fetch(apiUrl);

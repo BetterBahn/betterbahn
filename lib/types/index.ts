@@ -58,6 +58,8 @@ export interface JourneyLeg {
 	line?: {
 		name: string;
 		type: string;
+		product?: string;
+		productName?: string;
 	};
 	stopovers?: Stopover[];
 	remarks?: string[];

@@ -27,6 +27,23 @@ export default function JourneyCard({
 			: "??:??";
 	};
 
+	//todo: use line.operator to check for DB ticket eligibility instead of product and productName
+	const isEligibleForDeutschlandTicket = () => {
+		// Only check if Deutschland Ticket is enabled in search
+		if (!searchParams.deutschlandTicketDiscount) {
+			return false;
+		}
+
+		// Check if ALL legs have line.product === "regional"
+		return journey.legs.every((leg) => {
+			// Skip walking legs (they don't have a line)
+			if (!leg.line) {
+				return true;
+			}
+			return leg.line.product === "regional" || leg.line.productName === "Bus";
+		});
+	};
+
 	const getFirstLegDeparture = () => {
 		const firstLeg = journey.legs[0] as any;
 		const time = firstLeg?.departure || firstLeg?.plannedDeparture;
@@ -64,11 +81,19 @@ export default function JourneyCard({
 					<span className="text-gray-500 mx-2">→</span>
 					<span className="font-bold text-lg">{getLastLegArrival()}</span>
 				</div>
-				{journey.price && (
-					<span className="font-mono font-bold text-primary text-lg">
-						{journey.price.amount.toFixed(2)} {journey.price.currency}
-					</span>
-				)}
+				<div className="flex items-center gap-3">
+					{isEligibleForDeutschlandTicket() && (
+						<span className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-bold font-mono px-3 py-1 rounded-full border-2 border-green-300">
+							<span>✓</span>
+							<span>Deutschland-Ticket</span>
+						</span>
+					)}
+					{journey.price && (
+						<span className="font-mono font-bold text-primary text-lg">
+							{journey.price.amount.toFixed(2)} {journey.price.currency}
+						</span>
+					)}
+				</div>
 			</div>
 
 			{/* Journey Legs */}
