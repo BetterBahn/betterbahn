@@ -11,16 +11,45 @@ export interface Station {
 	};
 }
 
+// Stopover Types
+
+export interface StopoverStation {
+	id: string;
+	name: string;
+	type: string;
+	location?: {
+		type: string;
+		id: string;
+		latitude: number;
+		longitude: number;
+	};
+	priceCategory?: number;
+	[key: string]: any; // For additional properties
+}
+
+export interface Stopover {
+	stop: StopoverStation;
+	arrival?: string | null;
+	plannedArrival?: string | null;
+	arrivalDelay?: number | null;
+	departure?: string | null;
+	plannedDeparture?: string | null;
+	departureDelay?: number | null;
+	[key: string]: any; // For additional properties
+}
+
 // Journey Types
 
 export interface JourneyLeg {
 	origin: {
 		name: string;
 		type: string;
+		id?: string;
 	};
 	destination: {
 		name: string;
 		type: string;
+		id?: string;
 	};
 	departure?: string;
 	arrival?: string;
@@ -30,7 +59,9 @@ export interface JourneyLeg {
 		name: string;
 		type: string;
 	};
+	stopovers?: Stopover[];
 	remarks?: string[];
+	tripId?: string;
 }
 
 export interface Journey {
@@ -74,4 +105,26 @@ export interface JourneySearchParams {
 	firstClass?: boolean;
 	loyaltyCard?: string;
 	tickets?: boolean;
+}
+
+// Split Ticketing Types
+
+export interface SplitOption {
+	splitStation: StopoverStation;
+	firstLegPrice: number;
+	secondLegPrice: number;
+	totalPrice: number;
+	savings: number;
+	savingsPercentage: number;
+	firstLegJourney?: Journey;
+	secondLegJourney?: Journey;
+}
+
+export interface SplitTicketingResult {
+	originalPrice: number;
+	splits: SplitOption[];
+	loading: boolean;
+	error: string | null;
+	checkedStations: number;
+	totalStations: number;
 }

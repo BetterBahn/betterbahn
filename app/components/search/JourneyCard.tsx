@@ -1,13 +1,23 @@
 "use client";
 
-import { Journey } from "@/lib/types";
+import { useState } from "react";
+import { Journey, JourneySearchParams } from "@/lib/types";
+import { useSplit } from "@/lib/hooks/useSplit";
 
 interface JourneyCardProps {
 	journey: Journey;
 	index: number;
+	searchParams: JourneySearchParams;
 }
 
-export default function JourneyCard({ journey, index }: JourneyCardProps) {
+export default function JourneyCard({
+	journey,
+	index,
+	searchParams,
+}: JourneyCardProps) {
+	const [showSplitResults, setShowSplitResults] = useState(false);
+	const { result, checkSplitOptions } = useSplit();
+
 	const formatTime = (time: string | undefined) => {
 		return time
 			? new Date(time).toLocaleTimeString("de-DE", {
@@ -94,11 +104,21 @@ export default function JourneyCard({ journey, index }: JourneyCardProps) {
 			<div className="flex gap-4 mt-8">
 				<button
 					onClick={() => {
-						alert("Bald verfügbar!");
+						if (!showSplitResults) {
+							setShowSplitResults(true);
+							checkSplitOptions(journey, searchParams);
+						} else {
+							setShowSplitResults(false);
+						}
 					}}
-					className="bg-primary rounded-2xl py-2 px-6 text-white font-bold"
+					className="bg-primary rounded-2xl py-2 px-6 text-white font-bold hover:bg-opacity-90 transition-colors"
+					disabled={result.loading}
 				>
-					Split Ticketing
+					{result.loading
+						? `Prüfe ${result.checkedStations}/${result.totalStations}...`
+						: showSplitResults
+						? "Schließen"
+						: "Split Ticketing"}
 				</button>
 				<button
 					onClick={() => {
@@ -109,6 +129,128 @@ export default function JourneyCard({ journey, index }: JourneyCardProps) {
 					Reise erweitern
 				</button>
 			</div>
+
+			{/* Split Ticketing Results (Inline Expansion) */}
+			{showSplitResults && (
+				<div className="mt-6 border-t-2 border-gray-300 pt-6 animate-in slide-in-from-top duration-300">
+					{/* Loading State */}
+					{result.loading && (
+						<div className="py-6">
+							<p className="font-mono text-lg mb-2">
+								Prüfe Preise für {result.totalStations} Stationen...
+							</p>
+							<p className="font-mono text-primary mb-3">
+								{result.checkedStations} / {result.totalStations} geprüft
+							</p>
+							<div className="w-full bg-gray-200 rounded-full h-2">
+								<div
+									className="bg-primary h-2 rounded-full transition-all duration-300"
+									style={{
+										width: `${
+											(result.checkedStations / result.totalStations) * 100
+										}%`,
+									}}
+								/>
+							</div>
+						</div>
+					)}
+
+					{/* Error State */}
+					{result.error && !result.loading && (
+						<div className="p-4 bg-red-100 border-2 border-red-500 rounded-lg">
+							<p className="text-red-700 font-mono">{result.error}</p>
+						</div>
+					)}
+
+					{/* No Savings Found */}
+					{!result.loading &&
+						!result.error &&
+						result.splits.length === 0 &&
+						result.checkedStations > 0 && (
+							<div className="py-6 text-center">
+								<p className="font-mono text-lg">
+									Keine günstigeren Split-Optionen gefunden.
+								</p>
+								<p className="font-mono text-gray-600 mt-2">
+									{result.checkedStations} Stationen geprüft
+								</p>
+							</div>
+						)}
+
+					{/* Split Options */}
+					{!result.loading && result.splits.length > 0 && (
+						<div>
+							<div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+								<p className="font-mono font-bold text-green-800">
+									{result.splits.length} günstigere Option
+									{result.splits.length !== 1 ? "en" : ""} gefunden!
+								</p>
+								<p className="font-mono text-sm text-gray-600 mt-1">
+									Originalpreis: {result.originalPrice.toFixed(2)} EUR
+								</p>
+							</div>
+
+							<div className="space-y-3">
+								{result.splits.map((split, idx) => (
+									<div
+										key={idx}
+										className="border-2 border-gray-300 rounded-2xl p-4 hover:border-green-500 transition-colors bg-white"
+									>
+										<div className="flex justify-between items-start mb-3">
+											<div>
+												<p className="font-mono font-bold text-lg text-green-600">
+													Spare {split.savings.toFixed(2)} EUR
+												</p>
+												<p className="font-mono text-sm text-gray-600">
+													({split.savingsPercentage.toFixed(1)}% günstiger)
+												</p>
+											</div>
+											<div className="text-right">
+												<p className="font-mono font-bold text-lg">
+													{split.totalPrice.toFixed(2)} EUR
+												</p>
+												<p className="font-mono text-xs text-gray-500 line-through">
+													{result.originalPrice.toFixed(2)} EUR
+												</p>
+											</div>
+										</div>
+
+										<div className="border-t border-gray-200 pt-3">
+											<p className="font-mono font-semibold mb-2 text-sm text-gray-700">
+												Split-Punkt: {split.splitStation.name}
+											</p>
+
+											<div className="space-y-1 font-mono text-sm">
+												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
+													<span className="text-gray-700">
+														{journey.legs[0].origin.name} →{" "}
+														{split.splitStation.name}
+													</span>
+													<span className="font-semibold">
+														{split.firstLegPrice.toFixed(2)} EUR
+													</span>
+												</div>
+												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
+													<span className="text-gray-700">
+														{split.splitStation.name} →{" "}
+														{
+															journey.legs[journey.legs.length - 1].destination
+																.name
+														}
+													</span>
+													<span className="font-semibold">
+														{split.secondLegPrice.toFixed(2)} EUR
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }

@@ -4,7 +4,8 @@ import { useJourneySearch } from "@/lib/hooks/useJourneySearch";
 import JourneyCard from "./JourneyCard";
 
 export default function SearchResults() {
-	const { data, loading, error } = useJourneySearch();
+	// Now searchParams comes directly from the hook - single source of truth!
+	const { data, loading, error, searchParams } = useJourneySearch();
 
 	console.log("Journey Search Data:", data);
 
@@ -45,7 +46,12 @@ export default function SearchResults() {
 
 			<div className="flex flex-col gap-4">
 				{data.journeys.map((journey, index) => (
-					<JourneyCard key={index} journey={journey} index={index} />
+					<JourneyCard
+						key={index}
+						journey={journey}
+						index={index}
+						searchParams={searchParams}
+					/>
 				))}
 			</div>
 		</div>

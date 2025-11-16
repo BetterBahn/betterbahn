@@ -2,17 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { JourneyResponse } from "@/lib/types";
+import type { JourneyResponse, JourneySearchParams } from "@/lib/types";
 
 export function useJourneySearch() {
-	const searchParams = useSearchParams();
+	const urlSearchParams = useSearchParams();
 	const [data, setData] = useState<JourneyResponse | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
+	// Convert URL params to typed object (single source of truth)
+	const searchParams: JourneySearchParams = {
+		from: urlSearchParams.get("from") || "",
+		to: urlSearchParams.get("to") || "",
+		departure: urlSearchParams.get("departure") || undefined,
+		age: urlSearchParams.get("age") || undefined,
+		deutschlandTicketDiscount:
+			urlSearchParams.get("deutschlandTicket.discount") === "true",
+		firstClass: urlSearchParams.get("firstClass") === "true",
+		loyaltyCard: urlSearchParams.get("loyaltyCard") || undefined,
+		tickets: true,
+	};
+
 	useEffect(() => {
-		const from = searchParams.get("from");
-		const to = searchParams.get("to");
+		const from = urlSearchParams.get("from");
+		const to = urlSearchParams.get("to");
 
 		// Don't fetch if we don't have required params
 		if (!from || !to) {
@@ -24,8 +37,10 @@ export function useJourneySearch() {
 			setError(null);
 
 			try {
-				// Build the API URL with all search params
-				const apiUrl = `https://v6.db.transport.rest/journeys?${searchParams.toString()}`;
+				// Build the API URL with all search params, and add stopovers=true to get intermediate stations
+				const params = new URLSearchParams(urlSearchParams.toString());
+				params.set("stopovers", "true");
+				const apiUrl = `https://v6.db.transport.rest/journeys?${params.toString()}`;
 
 				const response = await fetch(apiUrl);
 
@@ -46,7 +61,7 @@ export function useJourneySearch() {
 		};
 
 		fetchJourneys();
-	}, [searchParams]);
+	}, [urlSearchParams]);
 
-	return { data, loading, error };
+	return { data, loading, error, searchParams };
 }
