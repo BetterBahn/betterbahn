@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import StationInput from "./StationInput";
 import type { Station } from "@/lib/types";
 
 export default function SearchForm() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const [origin, setOrigin] = useState<Station | null>(null);
 	const [destination, setDestination] = useState<Station | null>(null);
 	const [defaultDateTime, setDefaultDateTime] = useState<string>("");
@@ -76,8 +77,8 @@ export default function SearchForm() {
 		// Always request tickets info
 		params.append("tickets", "true");
 
-		// Navigate to results page with search params
-		router.push(`/results?${params.toString()}`);
+		// Update URL params on the same page to trigger results display
+		router.push(`/?${params.toString()}`, { scroll: false });
 	};
 
 	return (

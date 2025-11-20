@@ -40,7 +40,11 @@ export default function JourneyCard({
 			if (!leg.line) {
 				return true;
 			}
-			return leg.line.product === "regional" || leg.line.productName === "Bus";
+			return (
+				leg.line.product === "regional" ||
+				leg.line.productName === "Bus" ||
+				leg.line.product === "suburban"
+			);
 		});
 	};
 
