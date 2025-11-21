@@ -64,8 +64,11 @@ This change brings several benefits:
 
 ```bash
 # Clone the repository
-git clone [https://github.com/l2xu/betterbahn.git](https://github.com/l2xu/betterbahn.git)
+git clone https://github.com/BetterBahn/betterbahn.git
 cd betterbahn
+
+# Checkout the PWA branch
+git checkout feature/pwa
 
 # Install dependencies
 npm install

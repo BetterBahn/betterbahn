@@ -8,7 +8,7 @@ export default function Home() {
 		<main>
 			<Hero />
 			<SearchForm />
-			
+
 			{/* Journey Results displayed below search form */}
 			<div className="mt-8">
 				<Suspense
