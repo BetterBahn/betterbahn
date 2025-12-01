@@ -316,9 +316,7 @@ export function useSplit() {
 						const totalPrice = firstLegResult.price + secondLegResult.price;
 						const savings = originalPrice - totalPrice;
 
-						console.log(
-							`   Split total: ${(totalPrice / 100).toFixed(2)} EUR`
-						);
+						console.log(`   Split total: ${(totalPrice / 100).toFixed(2)} EUR`);
 						console.log(
 							`   Savings: ${(savings / 100).toFixed(2)} EUR (${(
 								(savings / originalPrice) *
@@ -376,9 +374,9 @@ export function useSplit() {
 			console.log(`Found: ${splitOptions.length} money-saving options`);
 			if (splitOptions.length > 0) {
 				console.log(
-					`Best saving: ${(splitOptions[0].savings / 100).toFixed(
-						2
-					)} EUR at ${splitOptions[0].splitStation.name}`
+					`Best saving: ${(splitOptions[0].savings / 100).toFixed(2)} EUR at ${
+						splitOptions[0].splitStation.name
+					}`
 				);
 			}
 			console.log("=================================================\n");

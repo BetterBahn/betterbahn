@@ -5,12 +5,48 @@ import { useRouter, useSearchParams } from "next/navigation";
 import StationInput from "./StationInput";
 import type { Station } from "@/lib/types";
 
+// Cookie utility functions
+const setCookie = (name: string, value: string, days: number = 365) => {
+	const expires = new Date();
+	expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+	document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+};
+
+const getCookie = (name: string): string | null => {
+	const nameEQ = name + "=";
+	const ca = document.cookie.split(";");
+	for (let i = 0; i < ca.length; i++) {
+		let c = ca[i];
+		while (c.charAt(0) === " ") c = c.substring(1, c.length);
+		if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+	}
+	return null;
+};
+
 export default function SearchForm() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [origin, setOrigin] = useState<Station | null>(null);
 	const [destination, setDestination] = useState<Station | null>(null);
 	const [defaultDateTime, setDefaultDateTime] = useState<string>("");
+	const [showAdvanced, setShowAdvanced] = useState(false);
+	const [age, setAge] = useState<string>("");
+	const [hasDTicket, setHasDTicket] = useState<boolean>(false);
+	const [trainClass, setTrainClass] = useState<string>("2");
+	const [bahncard, setBahncard] = useState<string>("none");
+
+	// Load preferences from cookies on mount
+	useEffect(() => {
+		const savedAge = getCookie("searchForm_age");
+		const savedDTicket = getCookie("searchForm_hasDTicket");
+		const savedTrainClass = getCookie("searchForm_trainClass");
+		const savedBahncard = getCookie("searchForm_bahncard");
+
+		if (savedAge) setAge(savedAge);
+		if (savedDTicket) setHasDTicket(savedDTicket === "true");
+		if (savedTrainClass) setTrainClass(savedTrainClass);
+		if (savedBahncard) setBahncard(savedBahncard);
+	}, []);
 
 	// Set default datetime to current time when component mounts
 	useEffect(() => {
@@ -53,23 +89,20 @@ export default function SearchForm() {
 			params.append("departure", isoDateTime);
 		}
 
-		// Optional parameters
-		const age = formData.get("age") as string;
+		// Optional parameters - use state values instead of formData
+		// This ensures values work even when advanced options are collapsed
 		if (age) {
 			params.append("age", age);
 		}
 
-		const hasDTicket = formData.get("hasDTicket") === "on";
 		if (hasDTicket) {
 			params.append("deutschlandTicketDiscount", "true");
 		}
 
-		const trainClass = formData.get("trainClass") as string;
 		if (trainClass === "1") {
 			params.append("firstClass", "true");
 		}
 
-		const bahncard = formData.get("bahncard") as string;
 		if (bahncard !== "none") {
 			params.append("loyaltyCard", `bahncard${bahncard}`);
 		}
@@ -132,7 +165,27 @@ export default function SearchForm() {
 				/>
 			</div>
 
-			{/* Age and D-Ticket Row */}
+			{/* Advanced Options Toggle */}
+			<button
+				type="button"
+				onClick={() => setShowAdvanced(!showAdvanced)}
+				className="flex items-center justify-center gap-2 w-full p-3 text-gray-700 font-medium hover:text-primary transition-colors"
+				aria-label="Erweiterte Optionen ein-/ausblenden"
+			>
+				<span className="font-mono">Erweiterte Optionen</span>
+				<span
+					className={`transition-transform duration-300 ${
+						showAdvanced ? "rotate-180" : ""
+					}`}
+				>
+					▼
+				</span>
+			</button>
+
+			{/* Collapsible Advanced Options */}
+			{showAdvanced && (
+				<div className="flex flex-col gap-4 animate-in slide-in-from-top duration-300">
+					{/* Age and D-Ticket Row */}
 			<div className="flex flex-col gap-4 md:flex-row">
 				<div className="flex flex-col gap-2 flex-1">
 					<label htmlFor="age" className="text-sm font-medium text-gray-700">
@@ -142,7 +195,12 @@ export default function SearchForm() {
 						id="age"
 						type="number"
 						name="age"
-						defaultValue="27"
+						value={age}
+						onChange={(e) => {
+							const value = e.target.value;
+							setAge(value);
+							setCookie("searchForm_age", value);
+						}}
 						min="0"
 						max="120"
 						placeholder="z.B. 25"
@@ -163,6 +221,12 @@ export default function SearchForm() {
 							id="hasDTicket"
 							type="checkbox"
 							name="hasDTicket"
+							checked={hasDTicket}
+							onChange={(e) => {
+								const checked = e.target.checked;
+								setHasDTicket(checked);
+								setCookie("searchForm_hasDTicket", checked.toString());
+							}}
 							aria-label="Ich besitze ein Deutschland-Ticket"
 							className="w-5 h-5 accent-primary cursor-pointer focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
 						/>
@@ -182,7 +246,12 @@ export default function SearchForm() {
 					<select
 						id="trainClass"
 						name="trainClass"
-						defaultValue="2"
+						value={trainClass}
+						onChange={(e) => {
+							const value = e.target.value;
+							setTrainClass(value);
+							setCookie("searchForm_trainClass", value);
+						}}
 						aria-label="Reiseklasse auswählen"
 						className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors cursor-pointer bg-white"
 					>
@@ -200,7 +269,12 @@ export default function SearchForm() {
 					<select
 						id="bahncard"
 						name="bahncard"
-						defaultValue="none"
+						value={bahncard}
+						onChange={(e) => {
+							const value = e.target.value;
+							setBahncard(value);
+							setCookie("searchForm_bahncard", value);
+						}}
 						aria-label="Bahncard-Typ auswählen"
 						className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors cursor-pointer bg-white"
 					>
@@ -211,6 +285,8 @@ export default function SearchForm() {
 					</select>
 				</div>
 			</div>
+				</div>
+			)}
 
 			{/* Search Button */}
 			<button
