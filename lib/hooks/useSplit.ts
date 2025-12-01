@@ -3,11 +3,13 @@
 import { useState, useCallback } from "react";
 import type {
 	Journey,
+	JourneyLeg,
 	JourneySearchParams,
 	SplitOption,
 	SplitTicketingResult,
 	Stopover,
 } from "@/lib/types";
+import { calculateLegPrice } from "@/lib/utils/deutschlandTicket";
 
 /**
  * Hook to find cheaper ticket prices by splitting a journey at intermediate stopovers
@@ -80,8 +82,8 @@ export function useSplit() {
 					from: fromStationId,
 					to: toStationId,
 					departure: departure,
-					results: "1", // We only need the first/cheapest result
-					stopovers: "false", // Don't need stopovers for price checks
+					results: "3", // Get multiple results to find matching journey
+					stopovers: "true", // Need stopovers for validation
 					...(searchParams.age && { age: searchParams.age }),
 					...(searchParams.deutschlandTicketDiscount && {
 						"deutschlandTicket.discount": "true",
@@ -105,8 +107,51 @@ export function useSplit() {
 
 				if (data.journeys && data.journeys.length > 0) {
 					const journey = data.journeys[0];
-					const price = journey.price?.amount;
-					return { price: price || null, journey };
+					const originalPrice = journey.price?.amount;
+
+					// Calculate effective price considering Deutschland-Ticket
+					// If user has Deutschland-Ticket (deutschlandTicketDiscount = true),
+					// check each leg and set price to 0 if eligible
+					let effectivePrice = originalPrice;
+
+					// Check if journey is Deutschland-Ticket eligible
+					if (searchParams.deutschlandTicketDiscount) {
+						// Check if all legs are Deutschland-Ticket eligible
+						const allLegsEligible = journey.legs.every((leg: JourneyLeg) => {
+							if (!leg.line) return true; // Walking legs don't count
+							return calculateLegPrice(leg, 1, true) === 0;
+						});
+
+						if (allLegsEligible) {
+							// Journey is covered by Deutschland-Ticket
+							effectivePrice = 0;
+							console.log(
+								`   Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`
+							);
+						}
+					}
+
+					// If we still don't have a price and it's not Deutschland-Ticket eligible,
+					// treat it as a failed price fetch
+					if (effectivePrice === null || effectivePrice === undefined) {
+						// Last check: is it Deutschland-Ticket eligible even without API price?
+						if (searchParams.deutschlandTicketDiscount) {
+							const allLegsEligible = journey.legs.every((leg: JourneyLeg) => {
+								if (!leg.line) return true;
+								return calculateLegPrice(leg, 1, true) === 0;
+							});
+
+							if (allLegsEligible) {
+								console.log(
+									`   No API price but Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`
+								);
+								return { price: 0, journey };
+							}
+						}
+						return { price: null, journey: null };
+					}
+
+					return { price: effectivePrice, journey };
 				}
 
 				return { price: null, journey: null };
@@ -126,6 +171,10 @@ export function useSplit() {
 	 */
 	const checkSplitOptions = useCallback(
 		async (journey: Journey, searchParams: JourneySearchParams) => {
+			console.log("=================================================");
+			console.log("STARTING SPLIT TICKETING ANALYSIS");
+			console.log("=================================================");
+
 			// Validate input
 			if (!journey.price?.amount) {
 				setResult({
@@ -146,6 +195,12 @@ export function useSplit() {
 			const originalDeparture =
 				journey.legs[0].departure || journey.legs[0].plannedDeparture;
 
+			console.log(
+				`Original Journey: ${originalOrigin.name} -> ${originalDestination.name}`
+			);
+			console.log(`Original Price: ${(originalPrice / 100).toFixed(2)} EUR`);
+			console.log(`Departure: ${originalDeparture}`);
+
 			if (!originalDeparture) {
 				setResult({
 					originalPrice,
@@ -160,8 +215,13 @@ export function useSplit() {
 
 			// Extract all stopovers
 			const stopovers = extractStopovers(journey);
+			console.log(`\nFound ${stopovers.length} potential split points:`);
+			stopovers.forEach((stopover, idx) => {
+				console.log(`  ${idx + 1}. ${stopover.stop.name}`);
+			});
 
 			if (stopovers.length === 0) {
+				console.log("No stopovers found - cannot check split options");
 				setResult({
 					originalPrice,
 					splits: [],
@@ -172,6 +232,10 @@ export function useSplit() {
 				});
 				return;
 			}
+
+			console.log("\n-------------------------------------------------");
+			console.log("Starting split point analysis...");
+			console.log("-------------------------------------------------\n");
 
 			// Set loading state
 			setResult({
@@ -190,7 +254,20 @@ export function useSplit() {
 			for (const stopover of stopovers) {
 				const splitStation = stopover.stop;
 
+				console.log(
+					`\nChecking split point ${checkedCount + 1}/${stopovers.length}: ${
+						splitStation.name
+					}`
+				);
+				console.log(
+					`   First leg:  ${originalOrigin.name} -> ${splitStation.name}`
+				);
+				console.log(
+					`   Second leg: ${splitStation.name} -> ${originalDestination.name}`
+				);
+
 				if (!splitStation.id || !originalOrigin.id || !originalDestination.id) {
+					console.log("   Missing station ID - skipping");
 					checkedCount++;
 					setResult((prev) => ({
 						...prev,
@@ -200,6 +277,8 @@ export function useSplit() {
 				}
 
 				try {
+					console.log("   Fetching prices for both legs...");
+
 					// Fetch prices for both legs in parallel
 					const [firstLegResult, secondLegResult] = await Promise.all([
 						fetchJourneyPrice(
@@ -218,13 +297,38 @@ export function useSplit() {
 						),
 					]);
 
-					// Check if both legs have valid prices
-					if (firstLegResult.price !== null && secondLegResult.price !== null) {
+					// Check if both legs have valid prices and journeys
+					if (
+						firstLegResult.price !== null &&
+						secondLegResult.price !== null &&
+						firstLegResult.journey &&
+						secondLegResult.journey
+					) {
+						console.log(
+							`   Got prices: ${(firstLegResult.price / 100).toFixed(
+								2
+							)} EUR + ${(secondLegResult.price / 100).toFixed(2)} EUR = ${(
+								(firstLegResult.price + secondLegResult.price) /
+								100
+							).toFixed(2)} EUR`
+						);
+
 						const totalPrice = firstLegResult.price + secondLegResult.price;
 						const savings = originalPrice - totalPrice;
 
+						console.log(
+							`   Split total: ${(totalPrice / 100).toFixed(2)} EUR`
+						);
+						console.log(
+							`   Savings: ${(savings / 100).toFixed(2)} EUR (${(
+								(savings / originalPrice) *
+								100
+							).toFixed(1)}%)`
+						);
+
 						// Only add if there are actual savings
 						if (savings > 0) {
+							console.log(`   VALID SPLIT FOUND! Adding to results.`);
 							splitOptions.push({
 								splitStation,
 								firstLegPrice: firstLegResult.price,
@@ -232,13 +336,24 @@ export function useSplit() {
 								totalPrice,
 								savings,
 								savingsPercentage: (savings / originalPrice) * 100,
-								firstLegJourney: firstLegResult.journey || undefined,
-								secondLegJourney: secondLegResult.journey || undefined,
+								firstLegJourney: firstLegResult.journey,
+								secondLegJourney: secondLegResult.journey,
 							});
+						} else {
+							console.log(`   No savings with this split - skipping`);
 						}
+					} else {
+						console.log(
+							`   Could not fetch prices for one or both legs (First: ${
+								firstLegResult.price !== null ? "OK" : "FAILED"
+							}, Second: ${secondLegResult.price !== null ? "OK" : "FAILED"})`
+						);
 					}
 				} catch (error) {
-					console.error(`Error checking split at ${splitStation.name}:`, error);
+					console.error(
+						`   Error checking split at ${splitStation.name}:`,
+						error
+					);
 				}
 
 				checkedCount++;
@@ -253,6 +368,20 @@ export function useSplit() {
 
 			// Sort by savings (highest first) and set final result
 			splitOptions.sort((a, b) => b.savings - a.savings);
+
+			console.log("\n=================================================");
+			console.log("SPLIT TICKETING ANALYSIS COMPLETE");
+			console.log("=================================================");
+			console.log(`Checked: ${checkedCount} split points`);
+			console.log(`Found: ${splitOptions.length} money-saving options`);
+			if (splitOptions.length > 0) {
+				console.log(
+					`Best saving: ${(splitOptions[0].savings / 100).toFixed(
+						2
+					)} EUR at ${splitOptions[0].splitStation.name}`
+				);
+			}
+			console.log("=================================================\n");
 
 			setResult({
 				originalPrice,

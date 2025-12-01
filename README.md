@@ -62,13 +62,16 @@ This change brings several benefits:
 
 ## Getting Started
 
-```bash
+ ```shell
 # Clone the repository
 git clone https://github.com/BetterBahn/betterbahn.git
 cd betterbahn
+```
 
 # Checkout the PWA branch
+ ```shell
 git checkout feature/pwa
+```
 
 # Install dependencies
 npm install

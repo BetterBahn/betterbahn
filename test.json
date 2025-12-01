@@ -1,0 +1,436 @@
+{
+    "type": "journey",
+    "legs": [
+        {
+            "origin": {
+                "id": "8000291",
+                "name": "Oldenburg(Oldb)Hbf",
+                "type": "station",
+                "location": {
+                    "type": "location",
+                    "id": "8000291",
+                    "latitude": 53.14411,
+                    "longitude": 8.222685
+                },
+                "products": {
+                    "nationalExpress": true,
+                    "national": true,
+                    "regionalExpress": false,
+                    "regional": true,
+                    "suburban": true,
+                    "subway": false,
+                    "tram": false,
+                    "bus": false,
+                    "taxi": false,
+                    "ferry": false
+                },
+                "weight": 371695,
+                "ril100Ids": [
+                    "HOLD"
+                ],
+                "ifoptId": "de:03403:16750",
+                "priceCategory": 2,
+                "transitAuthority": "LNVG",
+                "stadaId": "4765"
+            },
+            "destination": {
+                "id": "8001768",
+                "name": "Emden Hbf",
+                "type": "station",
+                "location": {
+                    "type": "location",
+                    "id": "8001768",
+                    "latitude": 53.369064,
+                    "longitude": 7.195029
+                },
+                "products": {
+                    "nationalExpress": true,
+                    "national": true,
+                    "regionalExpress": false,
+                    "regional": true,
+                    "suburban": false,
+                    "subway": false,
+                    "tram": false,
+                    "bus": false,
+                    "taxi": false,
+                    "ferry": false
+                },
+                "weight": 57960.6,
+                "ril100Ids": [
+                    "HE"
+                ],
+                "ifoptId": "de:03402:24289",
+                "priceCategory": 3,
+                "transitAuthority": "LNVG",
+                "stadaId": "1580"
+            },
+            "departure": "2025-12-05T20:33:00+01:00",
+            "plannedDeparture": "2025-12-05T20:33:00+01:00",
+            "departureDelay": null,
+            "arrival": "2025-12-05T21:38:00+01:00",
+            "plannedArrival": "2025-12-05T21:38:00+01:00",
+            "arrivalDelay": null,
+            "tripId": "2|#VN#1#ST#1764193482#PI#0#ZI#152859#TA#0#DA#51225#1S#8010205#1T#1542#LS#8004449#LT#2214#PU#80#RT#1#CA#IC#ZE#2034#ZB#IC           2034#PC#1#FR#8010205#FT#1542#TO#8004449#TT#2214#",
+            "line": {
+                "type": "line",
+                "id": "ic-2034",
+                "fahrtNr": "2034",
+                "name": "IC 2034",
+                "public": true,
+                "adminCode": "80____",
+                "productName": "IC",
+                "mode": "train",
+                "product": "national",
+                "operator": {
+                    "type": "operator",
+                    "id": "db-fernverkehr-ag",
+                    "name": "DB Fernverkehr AG"
+                }
+            },
+            "direction": "Norddeich",
+            "arrivalPlatform": "5",
+            "plannedArrivalPlatform": "5",
+            "departurePlatform": "6",
+            "plannedDeparturePlatform": "6",
+            "stopovers": [
+                {
+                    "stop": {
+                        "id": "8000291",
+                        "name": "Oldenburg(Oldb)Hbf",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8000291",
+                            "latitude": 53.14411,
+                            "longitude": 8.222685
+                        },
+                        "products": {
+                            "nationalExpress": true,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": true,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 371695,
+                        "ril100Ids": [
+                            "HOLD"
+                        ],
+                        "ifoptId": "de:03403:16750",
+                        "priceCategory": 2,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "4765"
+                    },
+                    "arrival": null,
+                    "plannedArrival": null,
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "6",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "6",
+                    "departure": "2025-12-05T20:33:00+01:00",
+                    "plannedDeparture": "2025-12-05T20:33:00+01:00",
+                    "departureDelay": null,
+                    "departurePlatform": "6",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "6",
+                    "loadFactor": "low-to-medium",
+                    "remarks": []
+                },
+                {
+                    "stop": {
+                        "id": "8000770",
+                        "name": "Bad Zwischenahn",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8000770",
+                            "latitude": 53.182457,
+                            "longitude": 8.004031
+                        },
+                        "products": {
+                            "nationalExpress": false,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": true,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 1953.1,
+                        "ril100Ids": [
+                            "HZWI"
+                        ],
+                        "ifoptId": "de:03451:6417",
+                        "priceCategory": 5,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "368"
+                    },
+                    "arrival": "2025-12-05T20:43:00+01:00",
+                    "plannedArrival": "2025-12-05T20:43:00+01:00",
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "1",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "1",
+                    "departure": "2025-12-05T20:44:00+01:00",
+                    "plannedDeparture": "2025-12-05T20:44:00+01:00",
+                    "departureDelay": null,
+                    "departurePlatform": "1",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "1",
+                    "loadFactor": "low-to-medium",
+                    "remarks": []
+                },
+                {
+                    "stop": {
+                        "id": "8004610",
+                        "name": "Westerstede-Ocholt",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8004610",
+                            "latitude": 53.20239,
+                            "longitude": 7.88558
+                        },
+                        "products": {
+                            "nationalExpress": false,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": false,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 1601.6,
+                        "ril100Ids": [
+                            "HOCH"
+                        ],
+                        "ifoptId": "de:03451:98668",
+                        "priceCategory": 5,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "4719"
+                    },
+                    "arrival": "2025-12-05T20:50:00+01:00",
+                    "plannedArrival": "2025-12-05T20:50:00+01:00",
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "3",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "3",
+                    "departure": "2025-12-05T20:51:00+01:00",
+                    "plannedDeparture": "2025-12-05T20:51:00+01:00",
+                    "departureDelay": null,
+                    "departurePlatform": "3",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "3",
+                    "loadFactor": "low-to-medium",
+                    "remarks": []
+                },
+                {
+                    "stop": {
+                        "id": "8000664",
+                        "name": "Augustfehn",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8000664",
+                            "latitude": 53.22084,
+                            "longitude": 7.759992
+                        },
+                        "products": {
+                            "nationalExpress": false,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": false,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 1520.9,
+                        "ril100Ids": [
+                            "HAUG"
+                        ],
+                        "ifoptId": "de:03451:3761",
+                        "priceCategory": 5,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "225"
+                    },
+                    "arrival": "2025-12-05T20:58:00+01:00",
+                    "plannedArrival": "2025-12-05T20:58:00+01:00",
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "2",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "2",
+                    "departure": "2025-12-05T20:59:00+01:00",
+                    "plannedDeparture": "2025-12-05T20:59:00+01:00",
+                    "departureDelay": null,
+                    "departurePlatform": "2",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "2",
+                    "loadFactor": "low-to-medium",
+                    "remarks": []
+                },
+                {
+                    "stop": {
+                        "id": "8000225",
+                        "name": "Leer(Ostfriesl)",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8000225",
+                            "latitude": 53.231384,
+                            "longitude": 7.465272
+                        },
+                        "products": {
+                            "nationalExpress": true,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": false,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 59776.5,
+                        "ril100Ids": [
+                            "HLEE"
+                        ],
+                        "ifoptId": "de:03457:54173",
+                        "priceCategory": 3,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "3609"
+                    },
+                    "arrival": "2025-12-05T21:14:00+01:00",
+                    "plannedArrival": "2025-12-05T21:14:00+01:00",
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "2",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "2",
+                    "departure": "2025-12-05T21:22:00+01:00",
+                    "plannedDeparture": "2025-12-05T21:22:00+01:00",
+                    "departureDelay": null,
+                    "departurePlatform": "2",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "2",
+                    "loadFactor": "low-to-medium",
+                    "remarks": []
+                },
+                {
+                    "stop": {
+                        "id": "8001768",
+                        "name": "Emden Hbf",
+                        "type": "station",
+                        "location": {
+                            "type": "location",
+                            "id": "8001768",
+                            "latitude": 53.369064,
+                            "longitude": 7.195029
+                        },
+                        "products": {
+                            "nationalExpress": true,
+                            "national": true,
+                            "regionalExpress": false,
+                            "regional": true,
+                            "suburban": false,
+                            "subway": false,
+                            "tram": false,
+                            "bus": false,
+                            "taxi": false,
+                            "ferry": false
+                        },
+                        "weight": 57960.6,
+                        "ril100Ids": [
+                            "HE"
+                        ],
+                        "ifoptId": "de:03402:24289",
+                        "priceCategory": 3,
+                        "transitAuthority": "LNVG",
+                        "stadaId": "1580"
+                    },
+                    "arrival": "2025-12-05T21:38:00+01:00",
+                    "plannedArrival": "2025-12-05T21:38:00+01:00",
+                    "arrivalDelay": null,
+                    "arrivalPlatform": "5",
+                    "arrivalPrognosisType": null,
+                    "plannedArrivalPlatform": "5",
+                    "departure": null,
+                    "plannedDeparture": null,
+                    "departureDelay": null,
+                    "departurePlatform": "5",
+                    "departurePrognosisType": null,
+                    "plannedDeparturePlatform": "5",
+                    "remarks": []
+                }
+            ],
+            "remarks": [
+                {
+                    "code": "NJ",
+                    "summary": "Local transport tickets are valid",
+                    "text": "Local transport tickets are valid",
+                    "type": "hint",
+                    "priority": 100
+                },
+                {
+                    "code": "9G",
+                    "summary": "Deutschland-Ticket valid",
+                    "text": "Deutschland-Ticket valid",
+                    "type": "hint",
+                    "priority": 186
+                },
+                {
+                    "text": "Komfort Check-in possible (visit bahn.de/kci for more information)",
+                    "type": "hint",
+                    "code": "komfort-checkin",
+                    "summary": "Komfort-Checkin available"
+                },
+                {
+                    "text": "Bicycles conveyed - subject to reservation",
+                    "type": "hint",
+                    "code": "bicycle-conveyance-reservation",
+                    "summary": "bicycles conveyed, subject to reservation"
+                },
+                {
+                    "text": "Number of bicycles conveyed limited",
+                    "type": "hint",
+                    "code": "bicycle-conveyance",
+                    "summary": "bicycles conveyed"
+                },
+                {
+                    "text": "Food and beverages served at seat",
+                    "type": "hint",
+                    "code": "snacks",
+                    "summary": "snacks available for purchase at the seat"
+                },
+                {
+                    "code": "RZ",
+                    "summary": "Step-free wheelchair access",
+                    "text": "Step-free wheelchair access",
+                    "type": "hint",
+                    "priority": 560
+                },
+                {
+                    "text": "Intercity 2: visit www.bahn.de/ic2 for more information",
+                    "type": "hint",
+                    "code": "intercity-2",
+                    "summary": "Intercity 2"
+                }
+            ],
+            "loadFactor": "low-to-medium"
+        }
+    ],
+    "refreshToken": "¶HKI¶T$A=1@O=Oldenburg(Oldb)Hbf@X=8222712@Y=53144326@L=8000291@a=128@$A=1@O=Emden Hbf@X=7195173@Y=53369038@L=8001768@a=128@$202512052033$202512052138$IC           2034$$1$$$$$$",
+    "remarks": []
+}

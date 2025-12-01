@@ -1,3 +1,13 @@
+// Remark Types
+
+export interface Remark {
+	code?: string;
+	summary?: string;
+	text?: string;
+	type?: string;
+	priority?: number;
+}
+
 // Station Types
 
 export interface Station {
@@ -62,7 +72,7 @@ export interface JourneyLeg {
 		productName?: string;
 	};
 	stopovers?: Stopover[];
-	remarks?: string[];
+	remarks?: (string | Remark)[];
 	tripId?: string;
 }
 
@@ -74,7 +84,7 @@ export interface Journey {
 		currency: string;
 	};
 	refreshToken?: string;
-	remarks?: string[];
+	remarks?: (string | Remark)[];
 }
 
 export interface JourneyResponse {

@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Journey, JourneySearchParams } from "@/lib/types";
 import { useSplit } from "@/lib/hooks/useSplit";
+import {
+	isFullJourneyDeutschlandTicketEligible,
+	isDeutschlandTicketEligible,
+} from "@/lib/utils/deutschlandTicket";
 
 interface JourneyCardProps {
 	journey: Journey;
@@ -27,25 +31,14 @@ export default function JourneyCard({
 			: "??:??";
 	};
 
-	//todo: use line.operator to check for DB ticket eligibility instead of product and productName
 	const isEligibleForDeutschlandTicket = () => {
 		// Only check if Deutschland Ticket is enabled in search
 		if (!searchParams.deutschlandTicketDiscount) {
 			return false;
 		}
 
-		// Check if ALL legs have line.product === "regional"
-		return journey.legs.every((leg) => {
-			// Skip walking legs (they don't have a line)
-			if (!leg.line) {
-				return true;
-			}
-			return (
-				leg.line.product === "regional" ||
-				leg.line.productName === "Bus" ||
-				leg.line.product === "suburban"
-			);
-		});
+		// Use centralized utility to check eligibility based on "9G" remark code
+		return isFullJourneyDeutschlandTicketEligible(journey.legs);
 	};
 
 	const getFirstLegDeparture = () => {
@@ -255,8 +248,17 @@ export default function JourneyCard({
 														{journey.legs[0].origin.name} →{" "}
 														{split.splitStation.name}
 													</span>
-													<span className="font-semibold">
-														{split.firstLegPrice.toFixed(2)} EUR
+													<span className="font-semibold flex items-center gap-2">
+														{split.firstLegPrice === 0 ? (
+															<>
+																<span className="text-green-600">0.00 EUR</span>
+																<span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
+																	D-Ticket
+																</span>
+															</>
+														) : (
+															`${split.firstLegPrice.toFixed(2)} EUR`
+														)}
 													</span>
 												</div>
 												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
@@ -267,8 +269,17 @@ export default function JourneyCard({
 																.name
 														}
 													</span>
-													<span className="font-semibold">
-														{split.secondLegPrice.toFixed(2)} EUR
+													<span className="font-semibold flex items-center gap-2">
+														{split.secondLegPrice === 0 ? (
+															<>
+																<span className="text-green-600">0.00 EUR</span>
+																<span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
+																	D-Ticket
+																</span>
+															</>
+														) : (
+															`${split.secondLegPrice.toFixed(2)} EUR`
+														)}
 													</span>
 												</div>
 											</div>
