@@ -28,8 +28,8 @@ export default function SearchForm() {
 	const searchParams = useSearchParams();
 	const [origin, setOrigin] = useState<Station | null>(null);
 	const [destination, setDestination] = useState<Station | null>(null);
-	const [defaultDateTime, setDefaultDateTime] = useState<string>("");
-	const [showAdvanced, setShowAdvanced] = useState(false);
+	const [defaultDate, setDefaultDate] = useState<string>("");
+	const [defaultTime, setDefaultTime] = useState<string>("");
 	const [age, setAge] = useState<string>("");
 	const [hasDTicket, setHasDTicket] = useState<boolean>(false);
 	const [trainClass, setTrainClass] = useState<string>("2");
@@ -51,14 +51,18 @@ export default function SearchForm() {
 	// Set default datetime to current time when component mounts
 	useEffect(() => {
 		const now = new Date();
-		// Format as YYYY-MM-DDTHH:mm for datetime-local input
+		// Format date as YYYY-MM-DD
 		const year = now.getFullYear();
 		const month = String(now.getMonth() + 1).padStart(2, "0");
 		const day = String(now.getDate()).padStart(2, "0");
+		const formattedDate = `${year}-${month}-${day}`;
+		setDefaultDate(formattedDate);
+
+		// Format time as HH:mm
 		const hours = String(now.getHours()).padStart(2, "0");
 		const minutes = String(now.getMinutes()).padStart(2, "0");
-		const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-		setDefaultDateTime(formattedDateTime);
+		const formattedTime = `${hours}:${minutes}`;
+		setDefaultTime(formattedTime);
 	}, []);
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,13 +82,13 @@ export default function SearchForm() {
 		params.append("from", origin.id);
 		params.append("to", destination.id);
 
-		// Date/Time - if provided, use departure, otherwise use current time
-		const dateTime = formData.get("dateTime") as string;
-		if (dateTime) {
-			// Convert the datetime-local input to ISO 8601 format with timezone
-			// datetime-local gives us "YYYY-MM-DDTHH:mm" in local time
-			// We need to convert it to ISO 8601 with timezone info
-			const localDate = new Date(dateTime);
+		// Date/Time - if provided, combine date and time, otherwise use current time
+		const date = formData.get("date") as string;
+		const time = formData.get("time") as string;
+		if (date && time) {
+			// Combine date and time into datetime-local format then convert to ISO
+			const dateTimeString = `${date}T${time}`;
+			const localDate = new Date(dateTimeString);
 			const isoDateTime = localDate.toISOString();
 			params.append("departure", isoDateTime);
 		}
@@ -122,14 +126,8 @@ export default function SearchForm() {
 		>
 			{/* Origin Station */}
 			<div className="flex flex-col gap-2">
-				<label
-					htmlFor="origin-station"
-					className="text-sm font-medium text-gray-700"
-				>
-					Von (Startbahnhof)
-				</label>
 				<StationInput
-					placeholder="z.B. Dresden Hbf"
+					placeholder="Startbahnhof"
 					value=""
 					onSelect={(station) => setOrigin(station)}
 				/>
@@ -137,58 +135,131 @@ export default function SearchForm() {
 
 			{/* Destination Station */}
 			<div className="flex flex-col gap-2">
-				<label
-					htmlFor="destination-station"
-					className="text-sm font-medium text-gray-700"
-				>
-					Nach (Zielbahnhof)
-				</label>
 				<StationInput
-					placeholder="z.B. München Hbf"
+					placeholder="Zielbahnhof"
 					value=""
 					onSelect={(station) => setDestination(station)}
 				/>
 			</div>
 
-			{/* Date and Time */}
-			<div className="flex flex-col gap-2">
-				<label htmlFor="dateTime" className="text-sm font-medium text-gray-700">
-					Datum und Uhrzeit (optional)
-				</label>
-				<input
-					id="dateTime"
-					type="datetime-local"
-					name="dateTime"
-					defaultValue={defaultDateTime}
-					aria-label="Abfahrtsdatum und -zeit auswählen"
-					className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors"
-				/>
-			</div>
+			{/* Information Fields - Horizontal Layout */}
+			<div className="bg-gray-50 rounded-2xl border-2 border-gray-200 overflow-hidden">
+				{/* Date */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+					<label
+						htmlFor="date"
+						className="text-base font-medium text-gray-700 font-mono"
+					>
+						Datum
+					</label>
+					<input
+						id="date"
+						type="date"
+						name="date"
+						defaultValue={defaultDate}
+						aria-label="Abfahrtsdatum auswählen"
+						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
+					/>
+				</div>
 
-			{/* Advanced Options Toggle */}
-			<button
-				type="button"
-				onClick={() => setShowAdvanced(!showAdvanced)}
-				className="flex items-center justify-center gap-2 w-full p-3 text-gray-700 font-medium hover:text-primary transition-colors"
-				aria-label="Erweiterte Optionen ein-/ausblenden"
-			>
-				<span className="font-mono">Erweiterte Optionen</span>
-				<span
-					className={`transition-transform duration-300 ${
-						showAdvanced ? "rotate-180" : ""
-					}`}
-				>
-					▼
-				</span>
-			</button>
+				{/* Time */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+					<label
+						htmlFor="time"
+						className="text-base font-medium text-gray-700 font-mono"
+					>
+						Uhrzeit
+					</label>
+					<input
+						id="time"
+						type="time"
+						name="time"
+						defaultValue={defaultTime}
+						aria-label="Abfahrtszeit auswählen"
+						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
+					/>
+				</div>
 
-			{/* Collapsible Advanced Options */}
-			{showAdvanced && (
-				<div className="flex flex-col gap-4 animate-in slide-in-from-top duration-300">
-					{/* Age and D-Ticket Row */}
-			<div className="flex flex-col gap-4 md:flex-row">
-				<div className="flex flex-col gap-2 flex-1">
-					<label htmlFor="age" className="text-sm font-medium text-gray-700">
+				{/* Deutschlandticket */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+					<label className="text-base font-medium text-gray-700 font-mono">
+						Deutschlandticket
+					</label>
+					<button
+						type="button"
+						onClick={() => {
+							const newValue = !hasDTicket;
+							setHasDTicket(newValue);
+							setCookie("searchForm_hasDTicket", newValue.toString());
+						}}
+						className="text-right text-base font-bold font-mono bg-transparent hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
+						aria-label="Deutschland-Ticket umschalten"
+					>
+						{hasDTicket ? "Ja!" : "Nein"}
+					</button>
+				</div>
+
+				{/* Bahncard */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+					<label
+						htmlFor="bahncard"
+						className="text-base font-medium text-gray-700 font-mono"
+					>
+						Bahncard
+					</label>
+					<select
+						id="bahncard"
+						name="bahncard"
+						value={bahncard}
+						onChange={(e) => {
+							const value = e.target.value;
+							setBahncard(value);
+							setCookie("searchForm_bahncard", value);
+						}}
+						aria-label="Bahncard-Typ auswählen"
+						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+					>
+						<option value="none">Keine</option>
+						<option value="-1st-25">BC-25 (1. Klasse)</option>
+						<option value="-2nd-25">BC-25 (2. Klasse)</option>
+						<option value="-1st-50">BC-50 (1. Klasse)</option>
+						<option value="-2nd-50">BC-50 (2. Klasse)</option>
+						<option value="-1st-100">BC-100 (1. Klasse)</option>
+						<option value="-2nd-100">BC-100 (2. Klasse)</option>
+					</select>
+				</div>
+
+				{/* Class */}
+				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+					<label
+						htmlFor="trainClass"
+						className="text-base font-medium text-gray-700 font-mono"
+					>
+						Klasse
+					</label>
+					<select
+						id="trainClass"
+						name="trainClass"
+						value={trainClass}
+						onChange={(e) => {
+							const value = e.target.value;
+							setTrainClass(value);
+							setCookie("searchForm_trainClass", value);
+						}}
+						aria-label="Reiseklasse auswählen"
+						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+					>
+						<option value="2">2</option>
+						<option value="1">1</option>
+					</select>
+				</div>
+
+				{/* Age */}
+				<div className="flex items-center justify-between px-4 py-4">
+					<label
+						htmlFor="age"
+						className="text-base font-medium text-gray-700 font-mono"
+					>
 						Alter
 					</label>
 					<input
@@ -203,96 +274,18 @@ export default function SearchForm() {
 						}}
 						min="0"
 						max="120"
-						placeholder="z.B. 25"
+						placeholder="27"
 						aria-label="Dein Alter eingeben"
-						className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors"
+						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-20"
 					/>
 				</div>
-				<div className="flex flex-col gap-2 flex-1">
-					<label
-						htmlFor="hasDTicket"
-						className="text-sm font-medium text-gray-700"
-					>
-						Deutschland-Ticket
-					</label>
-					<label className="flex items-center gap-3 border-2 border-gray-300 rounded-3xl p-4 text-base font-mono cursor-pointer hover:border-gray-400 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary">
-						<span>D-Ticket vorhanden</span>
-						<input
-							id="hasDTicket"
-							type="checkbox"
-							name="hasDTicket"
-							checked={hasDTicket}
-							onChange={(e) => {
-								const checked = e.target.checked;
-								setHasDTicket(checked);
-								setCookie("searchForm_hasDTicket", checked.toString());
-							}}
-							aria-label="Ich besitze ein Deutschland-Ticket"
-							className="w-5 h-5 accent-primary cursor-pointer focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-						/>
-					</label>
-				</div>
 			</div>
-
-			{/* Class and Bahncard Row */}
-			<div className="flex flex-col gap-4 md:flex-row">
-				<div className="flex flex-col gap-2 flex-1">
-					<label
-						htmlFor="trainClass"
-						className="text-sm font-medium text-gray-700"
-					>
-						Klasse
-					</label>
-					<select
-						id="trainClass"
-						name="trainClass"
-						value={trainClass}
-						onChange={(e) => {
-							const value = e.target.value;
-							setTrainClass(value);
-							setCookie("searchForm_trainClass", value);
-						}}
-						aria-label="Reiseklasse auswählen"
-						className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors cursor-pointer bg-white"
-					>
-						<option value="2">2. Klasse</option>
-						<option value="1">1. Klasse</option>
-					</select>
-				</div>
-				<div className="flex flex-col gap-2 flex-1">
-					<label
-						htmlFor="bahncard"
-						className="text-sm font-medium text-gray-700"
-					>
-						Bahncard
-					</label>
-					<select
-						id="bahncard"
-						name="bahncard"
-						value={bahncard}
-						onChange={(e) => {
-							const value = e.target.value;
-							setBahncard(value);
-							setCookie("searchForm_bahncard", value);
-						}}
-						aria-label="Bahncard-Typ auswählen"
-						className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors cursor-pointer bg-white"
-					>
-						<option value="none">Keine Bahncard</option>
-						<option value="25">Bahncard 25</option>
-						<option value="50">Bahncard 50</option>
-						<option value="100">Bahncard 100</option>
-					</select>
-				</div>
-			</div>
-				</div>
-			)}
 
 			{/* Search Button */}
 			<button
 				type="submit"
 				aria-label="Zugverbindung jetzt suchen"
-				className="w-full bg-primary text-white rounded-3xl p-4 text-lg font-mono font-bold hover:opacity-90 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 transition-all duration-200 mt-2"
+				className="w-full bg-primary text-white rounded-3xl p-3 text-lg font-mono font-bold hover:opacity-90 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-primary focus:ring-opacity-50 transition-all duration-200 mt-2"
 			>
 				Verbindung suchen
 			</button>

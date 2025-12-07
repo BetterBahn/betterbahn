@@ -39,7 +39,7 @@ export default function SearchResults() {
 	// Display results
 	return (
 		<div className="w-full ">
-			<h2 className="text-2xl mb-6 font-bold font-mono ">
+			<h2 className="text-xl mb-6 font-bold font-mono ">
 				{data.journeys.length} Verbindung
 				{data.journeys.length !== 1 ? "en" : ""} gefunden
 			</h2>

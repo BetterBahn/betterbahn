@@ -62,13 +62,13 @@ export default function StationInput({
 				aria-autocomplete="list"
 				aria-expanded={showDropdown}
 				role="combobox"
-				className="w-full border-2 border-gray-300 rounded-3xl p-4 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors"
+				className="w-full border-2 border-gray-300 rounded-2xl p-3 text-base font-mono focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary hover:border-gray-400 transition-colors"
 			/>
 
 			{/* Dropdown */}
 			{showDropdown && (inputValue.trim().length >= 2 || loading) && (
 				<div
-					className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-300 rounded-3xl shadow-lg max-h-60 overflow-y-auto"
+					className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto"
 					role="listbox"
 					aria-label="Bahnhof-Suchergebnisse"
 				>

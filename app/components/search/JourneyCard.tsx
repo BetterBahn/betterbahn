@@ -65,7 +65,7 @@ export default function JourneyCard({
 	return (
 		<div
 			onClick={handleCardClick}
-			className="border-2 border-gray-800 rounded-3xl p-4 hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+			className="border-2 border-gray-800 rounded-3xl p-3 hover:border-primary hover:shadow-lg transition-all cursor-pointer"
 		>
 			{/* Remarks Section */}
 			{journey.remarks && journey.remarks.length > 0 && (
@@ -82,69 +82,91 @@ export default function JourneyCard({
 					})}
 				</div>
 			)}
-
 			{/* Journey Overview */}
-			<div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-300">
-				<div className="flex items-center gap-3">
-					<div className="font-mono">
-						<span className="font-bold text-lg">{getFirstLegDeparture()}</span>
-						<span className="text-gray-500 mx-2">→</span>
-						<span className="font-bold text-lg">{getLastLegArrival()}</span>
-					</div>
-					<span
-						className={`text-gray-400 transition-transform duration-300 ${
-							showSplitResults ? "rotate-180" : ""
-						}`}
-					>
-						▼
-					</span>
-				</div>
-				<div className="flex items-center gap-3">
-					{isEligibleForDeutschlandTicket() && (
-						<span className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-bold font-mono px-3 py-1 rounded-full border-2 border-green-300">
+			<div className="mb-3 pb-3 border-b border-gray-300">
+				{/* Deutschland-Ticket Badge (if eligible) */}
+				{isEligibleForDeutschlandTicket() && (
+					<div className="mb-2">
+						<span className="inline-flex items-center gap-1 bg-green-100 text-green-800 text-xs font-bold font-mono px-2 py-0.5 rounded-full border-2 border-green-300">
 							<span>✓</span>
 							<span>Deutschland-Ticket</span>
 						</span>
-					)}
+					</div>
+				)}
+
+				{/* Time and Price Row */}
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2 font-mono">
+						<span className="font-bold text-base">
+							{getFirstLegDeparture()}
+						</span>
+						<span className="text-gray-500">→</span>
+						<span className="font-bold text-base">{getLastLegArrival()}</span>
+						<span
+							className={`text-gray-400 text-sm transition-transform duration-300 ${
+								showSplitResults ? "rotate-180" : ""
+							}`}
+						>
+							▼
+						</span>
+					</div>
 					{journey.price && (
-						<span className="font-mono font-bold text-primary text-lg">
+						<span className="font-mono font-bold text-primary text-base">
 							{journey.price.amount.toFixed(2)} {journey.price.currency}
 						</span>
 					)}
 				</div>
 			</div>
-
-			{/* Journey Legs */}
+			{/* Journey Legs - Two Column Layout */}
 			<div className="space-y-3">
 				{journey.legs.map(
 					(leg, legIndex) =>
 						leg.line && (
-							<div key={legIndex} className="font-mono text-sm">
-								<div className="flex items-center gap-2 mb-1">
-									<span className="inline-block bg-gray-200 px-2 py-1 rounded font-semibold">
-										{leg.line.name}
-									</span>
+							<div key={legIndex}>
+								<div className="font-mono text-xs">
+									{/* Departure Row */}
+									<div className="flex gap-3">
+										<div className="font-bold text-gray-900 w-12 shrink-0">
+											{formatTime(
+												(leg as any).departure || (leg as any).plannedDeparture
+											)}
+										</div>
+										<div className="flex-1 text-gray-700">
+											{leg.origin.name}
+										</div>
+									</div>
+
+									{/* Train Line */}
+									<div className="flex gap-3 my-1">
+										<div className="w-12 shrink-0"></div>
+										<div className="flex-1">
+											<span className="inline-block bg-gray-200 px-2 py-0.5 rounded font-semibold text-xs">
+												{leg.line.name}
+											</span>
+										</div>
+									</div>
+
+									{/* Arrival Row */}
+									<div className="flex gap-3">
+										<div className="font-bold text-gray-900 w-12 shrink-0">
+											{formatTime(
+												(leg as any).arrival || (leg as any).plannedArrival
+											)}
+										</div>
+										<div className="flex-1 text-gray-700">
+											{leg.destination.name}
+										</div>
+									</div>
 								</div>
-								<div className="flex items-center gap-2 text-gray-700">
-									<span className="font-bold">
-										{formatTime(
-											(leg as any).departure || (leg as any).plannedDeparture
-										)}
-									</span>
-									<span>{leg.origin.name}</span>
-									<span className="text-gray-400">→</span>
-									<span className="font-bold">
-										{formatTime(
-											(leg as any).arrival || (leg as any).plannedArrival
-										)}
-									</span>
-									<span>{leg.destination.name}</span>
-								</div>
+
+								{/* Divider between legs */}
+								{legIndex < journey.legs.filter((l) => l.line).length - 1 && (
+									<div className="border-t border-gray-300 mt-3"></div>
+								)}
 							</div>
 						)
 				)}
-			</div>
-
+			</div>{" "}
 			{/* Split Ticketing Results (Inline Expansion) */}
 			{showSplitResults && (
 				<div className="mt-6 border-t-2 border-gray-300 pt-6 animate-in slide-in-from-top duration-300">
@@ -213,29 +235,28 @@ export default function JourneyCard({
 									>
 										<div className="flex justify-between items-start mb-3">
 											<div>
-												<p className="font-mono font-bold text-lg text-green-600">
+												<p className="font-mono font-bold text-base text-green-600">
 													Spare {split.savings.toFixed(2)} EUR
 												</p>
-												<p className="font-mono text-sm text-gray-600">
+												<p className="font-mono text-xs text-gray-600">
 													({split.savingsPercentage.toFixed(1)}% günstiger)
 												</p>
 											</div>
 											<div className="text-right">
-												<p className="font-mono font-bold text-lg">
+												<p className="font-mono font-bold text-base">
 													{split.totalPrice.toFixed(2)} EUR
 												</p>
 												<p className="font-mono text-xs text-gray-500 line-through">
 													{result.originalPrice.toFixed(2)} EUR
 												</p>
 											</div>
-										</div>
-
+										</div>{" "}
 										<div className="border-t border-gray-200 pt-3">
-											<p className="font-mono font-semibold mb-2 text-sm text-gray-700">
+											<p className="font-mono font-semibold mb-2 text-xs text-gray-700">
 												Split-Punkt: {split.splitStation.name}
 											</p>
 
-											<div className="space-y-1 font-mono text-sm">
+											<div className="space-y-1 font-mono text-xs">
 												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
 													<span className="text-gray-700">
 														{journey.legs[0].origin.name} →{" "}
