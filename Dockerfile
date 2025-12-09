@@ -1,48 +1,25 @@
-# Dockerfile
-FROM node:25-alpine AS base
+FROM node:25-alpine AS builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-# Stufe 1: Abhängigkeiten installieren
-FROM base AS deps
+RUN npm install -g pnpm
 WORKDIR /app
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
-
-# Stufe 2: Die Anwendung bauen
-FROM base AS builder
-
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN pnpm install --frozen-lockfile
 RUN pnpm run build
 
-# Stufe 3: Finale, produktive Stufe
-FROM base AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
-
-# Set timezone to Europe/Berlin (German timezone)
 ENV TZ=Europe/Berlin
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# add curl to get heathcheck to run
-RUN apk add curl
-
-
-# Kopieren des Standalone-Outputs aus der Builder-Stufe
+RUN apk add --no-cache curl
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Kopiert manuell das Modul, dessen Datendateien vom 'standalone'-Modus nicht erfasst werden.
+# Some data files used at runtime are not included in standalone
 COPY --from=builder /app/node_modules/.pnpm/db-hafas-stations@2.0.0 ./node_modules/.pnpm/db-hafas-stations@2.0.0
 
-# Wechsel zum non-root 'node' Benutzer für erhöhte Sicherheit
 USER node
-
-# Expose port and add healthcheck
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=5 \
     CMD IP=$(hostname -i | awk '{print $1}'); curl -fsS -4 "http://$IP:${PORT:-3000}" || exit 1
