@@ -1,6 +1,6 @@
 services:
   betterbahn:
-    image: ghcr.io/l2xu/betterbahn:latest
+    image: ghcr.io/betterbahn/betterbahn:latest
     restart: unless-stopped
     environment:
       - TZ=Europe/Berlin # Timezone, dont Remove or else There will be time issues with tickets.
