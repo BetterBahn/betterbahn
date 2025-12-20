@@ -10,11 +10,11 @@ Es sind **keine Linux- oder Technikkenntnisse** erforderlich.
 * Android-Smartphone oder Tablet
 * Stabile Internetverbindung
 * Mindestens **5 GB freier Speicher** (10GB empfohlen)
-* **Termux** (empfohlen aus **[F-Droid](https://f-droid.org/)** installiert)
+* **[Termux](https://f-droid.org/packages/com.termux/)** (empfohlen aus **[F-Droid](https://f-droid.org/)** installiert)
 
 Empfohlen:
 
-* **Termux:Widget** (für ein Startsymbol auf dem Homescreen)
+* **[Termux:Widget](https://f-droid.org/de/packages/com.termux.widget/)** (für ein Startsymbol auf dem Homescreen)
 
 ---
 
@@ -110,7 +110,7 @@ Nein. Docker wird **nicht** benötigt und nicht installiert.
 Nein. Alles läuft isoliert innerhalb von Termux.
 
 **Kann ich Betterbahn wieder entfernen?**
-Ja. Durch Löschen der Betterbahn-Ordner in Termux.
+Ja. Durch Löschen der Betterbahn Proot umgebung.
 
 ---
 

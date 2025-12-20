@@ -10,11 +10,11 @@ This guide explains how to install, start, and stop Betterbahn on an Android dev
 * Android smartphone or tablet
 * Stable internet connection
 * At least **5 GB of free storage** (10 GB recommended)
-* **Termux** (recommended installation from **[F-Droid](https://f-droid.org/)**)
+* **[Termux](https://f-droid.org/packages/com.termux/)** (recommended installation from **[F-Droid](https://f-droid.org/)**)
 
 Recommended:
 
-* **Termux:Widget** (for a launch icon on the home screen)
+* **[Termux:Widget](https://f-droid.org/de/packages/com.termux.widget/)** (for a launch icon on the home screen)
 
 ---
 
@@ -113,7 +113,7 @@ No. Docker is **not** required and is not installed.
 No. Everything runs isolated inside Termux.
 
 **Can I remove Betterbahn again?**
-Yes. Simply delete the Betterbahn directories inside Termux.
+Yes. Simply delete the Betterbahn Proot.
 
 ---
 
