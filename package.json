@@ -11,7 +11,7 @@
     "oxlint": "oxlint"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-query": "^5.90.16",
     "@trpc/client": "^11.7.2",
     "@trpc/next": "^11.8.1",
     "@trpc/react-query": "^11.7.2",
