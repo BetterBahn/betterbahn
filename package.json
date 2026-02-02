@@ -16,7 +16,7 @@
     "@trpc/next": "^11.8.1",
     "@trpc/react-query": "^11.7.2",
     "@trpc/server": "^11.8.0",
-    "@trpc/tanstack-react-query": "^11.7.2",
+    "@trpc/tanstack-react-query": "^11.9.0",
     "db-hafas-stations": "^2.0.0",
     "db-vendo-client": "^6.10.7",
     "next": "16.1.6",
