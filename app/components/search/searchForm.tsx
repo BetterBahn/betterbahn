@@ -34,6 +34,10 @@ export default function SearchForm() {
 	const [hasDTicket, setHasDTicket] = useState<boolean>(false);
 	const [trainClass, setTrainClass] = useState<string>("2");
 	const [bahncard, setBahncard] = useState<string>("none");
+	const [showOptions, setShowOptions] = useState<boolean>(false);
+
+	// Check if a search has been performed
+	const hasSearchResults = searchParams.has("from") && searchParams.has("to");
 
 	// Load preferences from cookies on mount
 	useEffect(() => {
@@ -163,7 +167,7 @@ export default function SearchForm() {
 				</div>
 
 				{/* Time */}
-				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+				<div className={`flex items-center justify-between px-4 py-4 ${hasSearchResults && !showOptions ? '' : 'border-b border-gray-200'}`}>
 					<label
 						htmlFor="time"
 						className="text-base font-medium text-gray-700 font-mono"
@@ -180,24 +184,55 @@ export default function SearchForm() {
 					/>
 				</div>
 
-				{/* Deutschlandticket */}
-				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-					<label className="text-base font-medium text-gray-700 font-mono">
-						Deutschlandticket
-					</label>
-					<button
-						type="button"
-						onClick={() => {
-							const newValue = !hasDTicket;
-							setHasDTicket(newValue);
-							setCookie("searchForm_hasDTicket", newValue.toString());
-						}}
-						className="text-right text-base font-bold font-mono bg-transparent hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
-						aria-label="Deutschland-Ticket umschalten"
-					>
-						{hasDTicket ? "Ja!" : "Nein"}
-					</button>
-				</div>
+				{/* Options toggle button - only show when search results exist */}
+				{hasSearchResults && !showOptions && (
+					<div className="flex items-center justify-center px-4 py-3 bg-gray-100 border-t border-gray-200">
+						<button
+							type="button"
+							onClick={() => setShowOptions(true)}
+							className="text-sm font-medium text-gray-600 hover:text-gray-800 font-mono flex items-center gap-1"
+							aria-label="Optionen anzeigen"
+						>
+							<span>▼</span> Optionen
+						</button>
+					</div>
+				)}
+
+				{/* Advanced options - show by default when no search, or when toggled */}
+				{(!hasSearchResults || showOptions) && (
+					<>
+						{/* Hide options button - only show when search results exist and options are shown */}
+						{hasSearchResults && showOptions && (
+							<div className="flex items-center justify-center px-4 py-3 bg-gray-100 border-b border-gray-200">
+								<button
+									type="button"
+									onClick={() => setShowOptions(false)}
+									className="text-sm font-medium text-gray-600 hover:text-gray-800 font-mono flex items-center gap-1"
+									aria-label="Optionen ausblenden"
+								>
+									<span>▲</span> Optionen ausblenden
+								</button>
+							</div>
+						)}
+
+						{/* Deutschlandticket */}
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+							<label className="text-base font-medium text-gray-700 font-mono">
+								Deutschlandticket
+							</label>
+							<button
+								type="button"
+								onClick={() => {
+									const newValue = !hasDTicket;
+									setHasDTicket(newValue);
+									setCookie("searchForm_hasDTicket", newValue.toString());
+								}}
+								className="text-right text-base font-bold font-mono bg-transparent hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
+								aria-label="Deutschland-Ticket umschalten"
+							>
+								{hasDTicket ? "Ja!" : "Nein"}
+							</button>
+						</div>
 
 				{/* Bahncard */}
 				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
@@ -279,6 +314,8 @@ export default function SearchForm() {
 						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-20"
 					/>
 				</div>
+					</>
+				)}
 			</div>
 
 			{/* Search Button */}
