@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { JourneyResponse, JourneySearchParams } from "@/lib/types";
+import { useApiBaseUrl } from "@/lib/hooks/useApiBaseUrl";
 
 export function useJourneySearch() {
 	const urlSearchParams = useSearchParams();
+	const baseUrl = useApiBaseUrl();
 	const [data, setData] = useState<JourneyResponse | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function useJourneySearch() {
 				const params = new URLSearchParams(urlSearchParams.toString());
 				params.set("stopovers", "true");
 				params.set("tickets", "true"); // Always get ticket prices
-				const apiUrl = `https://v6.db.transport.rest/journeys?${params.toString()}`;
+				const apiUrl = `${baseUrl}/journeys?${params.toString()}`;
 
 				const response = await fetch(apiUrl);
 
@@ -53,7 +55,7 @@ export function useJourneySearch() {
 				setData(result);
 			} catch (err) {
 				setError(
-					err instanceof Error ? err.message : "Failed to fetch journeys"
+					err instanceof Error ? err.message : "Failed to fetch journeys",
 				);
 				console.error("Error fetching journeys:", err);
 			} finally {
@@ -62,7 +64,7 @@ export function useJourneySearch() {
 		};
 
 		fetchJourneys();
-	}, [urlSearchParams]);
+	}, [urlSearchParams, baseUrl]);
 
 	return { data, loading, error, searchParams };
 }

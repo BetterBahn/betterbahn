@@ -167,7 +167,9 @@ export default function SearchForm() {
 				</div>
 
 				{/* Time */}
-				<div className={`flex items-center justify-between px-4 py-4 ${hasSearchResults && !showOptions ? '' : 'border-b border-gray-200'}`}>
+				<div
+					className={`flex items-center justify-between px-4 py-4 ${hasSearchResults && !showOptions ? "" : "border-b border-gray-200"}`}
+				>
 					<label
 						htmlFor="time"
 						className="text-base font-medium text-gray-700 font-mono"
@@ -234,86 +236,86 @@ export default function SearchForm() {
 							</button>
 						</div>
 
-				{/* Bahncard */}
-				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-					<label
-						htmlFor="bahncard"
-						className="text-base font-medium text-gray-700 font-mono"
-					>
-						Bahncard
-					</label>
-					<select
-						id="bahncard"
-						name="bahncard"
-						value={bahncard}
-						onChange={(e) => {
-							const value = e.target.value;
-							setBahncard(value);
-							setCookie("searchForm_bahncard", value);
-						}}
-						aria-label="Bahncard-Typ auswählen"
-						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
-					>
-						<option value="none">Keine</option>
-						<option value="-1st-25">BC-25 (1. Klasse)</option>
-						<option value="-2nd-25">BC-25 (2. Klasse)</option>
-						<option value="-1st-50">BC-50 (1. Klasse)</option>
-						<option value="-2nd-50">BC-50 (2. Klasse)</option>
-						<option value="-1st-100">BC-100 (1. Klasse)</option>
-						<option value="-2nd-100">BC-100 (2. Klasse)</option>
-					</select>
-				</div>
+						{/* Bahncard */}
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+							<label
+								htmlFor="bahncard"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
+								Bahncard
+							</label>
+							<select
+								id="bahncard"
+								name="bahncard"
+								value={bahncard}
+								onChange={(e) => {
+									const value = e.target.value;
+									setBahncard(value);
+									setCookie("searchForm_bahncard", value);
+								}}
+								aria-label="Bahncard-Typ auswählen"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+							>
+								<option value="none">Keine</option>
+								<option value="-1st-25">BC-25 (1. Klasse)</option>
+								<option value="-2nd-25">BC-25 (2. Klasse)</option>
+								<option value="-1st-50">BC-50 (1. Klasse)</option>
+								<option value="-2nd-50">BC-50 (2. Klasse)</option>
+								<option value="-1st-100">BC-100 (1. Klasse)</option>
+								<option value="-2nd-100">BC-100 (2. Klasse)</option>
+							</select>
+						</div>
 
-				{/* Class */}
-				<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-					<label
-						htmlFor="trainClass"
-						className="text-base font-medium text-gray-700 font-mono"
-					>
-						Klasse
-					</label>
-					<select
-						id="trainClass"
-						name="trainClass"
-						value={trainClass}
-						onChange={(e) => {
-							const value = e.target.value;
-							setTrainClass(value);
-							setCookie("searchForm_trainClass", value);
-						}}
-						aria-label="Reiseklasse auswählen"
-						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
-					>
-						<option value="2">2</option>
-						<option value="1">1</option>
-					</select>
-				</div>
+						{/* Class */}
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+							<label
+								htmlFor="trainClass"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
+								Klasse
+							</label>
+							<select
+								id="trainClass"
+								name="trainClass"
+								value={trainClass}
+								onChange={(e) => {
+									const value = e.target.value;
+									setTrainClass(value);
+									setCookie("searchForm_trainClass", value);
+								}}
+								aria-label="Reiseklasse auswählen"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+							>
+								<option value="2">2</option>
+								<option value="1">1</option>
+							</select>
+						</div>
 
-				{/* Age */}
-				<div className="flex items-center justify-between px-4 py-4">
-					<label
-						htmlFor="age"
-						className="text-base font-medium text-gray-700 font-mono"
-					>
-						Alter
-					</label>
-					<input
-						id="age"
-						type="number"
-						name="age"
-						value={age}
-						onChange={(e) => {
-							const value = e.target.value;
-							setAge(value);
-							setCookie("searchForm_age", value);
-						}}
-						min="0"
-						max="120"
-						placeholder="27"
-						aria-label="Dein Alter eingeben"
-						className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-20"
-					/>
-				</div>
+						{/* Age */}
+						<div className="flex items-center justify-between px-4 py-4">
+							<label
+								htmlFor="age"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
+								Alter
+							</label>
+							<input
+								id="age"
+								type="number"
+								name="age"
+								value={age}
+								onChange={(e) => {
+									const value = e.target.value;
+									setAge(value);
+									setCookie("searchForm_age", value);
+								}}
+								min="0"
+								max="120"
+								placeholder="27"
+								aria-label="Dein Alter eingeben"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-20"
+							/>
+						</div>
 					</>
 				)}
 			</div>

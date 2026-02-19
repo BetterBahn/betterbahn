@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useApiBaseUrl } from "@/lib/hooks/useApiBaseUrl";
 import type {
 	Journey,
 	JourneyLeg,
@@ -27,6 +28,7 @@ export function useSplit() {
 		checkedStations: 0,
 		totalStations: 0,
 	});
+	const baseUrl = useApiBaseUrl();
 
 	/**
 	 * Extract all stopovers from all legs of the journey
@@ -74,7 +76,7 @@ export function useSplit() {
 			fromStationId: string,
 			toStationId: string,
 			departure: string,
-			searchParams: JourneySearchParams
+			searchParams: JourneySearchParams,
 		): Promise<{ price: number | null; journey: Journey | null }> => {
 			try {
 				// Build API URL with search parameters
@@ -95,7 +97,7 @@ export function useSplit() {
 					tickets: "true", // Always get ticket prices
 				});
 
-				const apiUrl = `https://v6.db.transport.rest/journeys?${params.toString()}`;
+				const apiUrl = `${baseUrl}/journeys?${params.toString()}`;
 				const response = await fetch(apiUrl);
 
 				if (!response.ok) {
@@ -126,7 +128,7 @@ export function useSplit() {
 							// Journey is covered by Deutschland-Ticket
 							effectivePrice = 0;
 							console.log(
-								`   Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`
+								`   Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`,
 							);
 						}
 					}
@@ -143,7 +145,7 @@ export function useSplit() {
 
 							if (allLegsEligible) {
 								console.log(
-									`   No API price but Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`
+									`   No API price but Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`,
 								);
 								return { price: 0, journey };
 							}
@@ -158,12 +160,12 @@ export function useSplit() {
 			} catch (error) {
 				console.error(
 					`Error fetching price for ${fromStationId} -> ${toStationId}:`,
-					error
+					error,
 				);
 				return { price: null, journey: null };
 			}
 		},
-		[]
+		[baseUrl],
 	);
 
 	/**
@@ -196,7 +198,7 @@ export function useSplit() {
 				journey.legs[0].departure || journey.legs[0].plannedDeparture;
 
 			console.log(
-				`Original Journey: ${originalOrigin.name} -> ${originalDestination.name}`
+				`Original Journey: ${originalOrigin.name} -> ${originalDestination.name}`,
 			);
 			console.log(`Original Price: ${(originalPrice / 100).toFixed(2)} EUR`);
 			console.log(`Departure: ${originalDeparture}`);
@@ -257,13 +259,13 @@ export function useSplit() {
 				console.log(
 					`\nChecking split point ${checkedCount + 1}/${stopovers.length}: ${
 						splitStation.name
-					}`
+					}`,
 				);
 				console.log(
-					`   First leg:  ${originalOrigin.name} -> ${splitStation.name}`
+					`   First leg:  ${originalOrigin.name} -> ${splitStation.name}`,
 				);
 				console.log(
-					`   Second leg: ${splitStation.name} -> ${originalDestination.name}`
+					`   Second leg: ${splitStation.name} -> ${originalDestination.name}`,
 				);
 
 				if (!splitStation.id || !originalOrigin.id || !originalDestination.id) {
@@ -285,7 +287,7 @@ export function useSplit() {
 							originalOrigin.id,
 							splitStation.id,
 							originalDeparture,
-							searchParams
+							searchParams,
 						),
 						fetchJourneyPrice(
 							splitStation.id,
@@ -293,7 +295,7 @@ export function useSplit() {
 							stopover.departure ||
 								stopover.plannedDeparture ||
 								originalDeparture,
-							searchParams
+							searchParams,
 						),
 					]);
 
@@ -306,11 +308,11 @@ export function useSplit() {
 					) {
 						console.log(
 							`   Got prices: ${(firstLegResult.price / 100).toFixed(
-								2
+								2,
 							)} EUR + ${(secondLegResult.price / 100).toFixed(2)} EUR = ${(
 								(firstLegResult.price + secondLegResult.price) /
 								100
-							).toFixed(2)} EUR`
+							).toFixed(2)} EUR`,
 						);
 
 						const totalPrice = firstLegResult.price + secondLegResult.price;
@@ -321,7 +323,7 @@ export function useSplit() {
 							`   Savings: ${(savings / 100).toFixed(2)} EUR (${(
 								(savings / originalPrice) *
 								100
-							).toFixed(1)}%)`
+							).toFixed(1)}%)`,
 						);
 
 						// Only add if there are actual savings
@@ -344,13 +346,13 @@ export function useSplit() {
 						console.log(
 							`   Could not fetch prices for one or both legs (First: ${
 								firstLegResult.price !== null ? "OK" : "FAILED"
-							}, Second: ${secondLegResult.price !== null ? "OK" : "FAILED"})`
+							}, Second: ${secondLegResult.price !== null ? "OK" : "FAILED"})`,
 						);
 					}
 				} catch (error) {
 					console.error(
 						`   Error checking split at ${splitStation.name}:`,
-						error
+						error,
 					);
 				}
 
@@ -376,7 +378,7 @@ export function useSplit() {
 				console.log(
 					`Best saving: ${(splitOptions[0].savings / 100).toFixed(2)} EUR at ${
 						splitOptions[0].splitStation.name
-					}`
+					}`,
 				);
 			}
 			console.log("=================================================\n");
@@ -390,7 +392,7 @@ export function useSplit() {
 				totalStations: stopovers.length,
 			});
 		},
-		[extractStopovers, fetchJourneyPrice]
+		[extractStopovers, fetchJourneyPrice, baseUrl],
 	);
 
 	return {

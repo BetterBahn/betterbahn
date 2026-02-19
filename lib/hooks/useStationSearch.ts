@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useDebounce } from "./useDebounce";
 import type { Station, StationSearchResult } from "@/lib/types";
+import { useApiBaseUrl } from "@/lib/hooks/useApiBaseUrl";
 
 export function useStationSearch(query: string): StationSearchResult {
 	const [stations, setStations] = useState<Station[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const baseUrl = useApiBaseUrl();
 
 	const debouncedQuery = useDebounce(query, 300);
 
@@ -24,8 +26,8 @@ export function useStationSearch(query: string): StationSearchResult {
 			setError(null);
 
 			try {
-				const url = `https://v6.db.transport.rest/locations?poi=false&addresses=false&query=${encodeURIComponent(
-					debouncedQuery
+				const url = `${baseUrl}/locations?poi=false&addresses=false&query=${encodeURIComponent(
+					debouncedQuery,
 				)}`;
 
 				const response = await fetch(url);
@@ -38,7 +40,7 @@ export function useStationSearch(query: string): StationSearchResult {
 				setStations(data || []);
 			} catch (err) {
 				setError(
-					err instanceof Error ? err.message : "Failed to fetch stations"
+					err instanceof Error ? err.message : "Failed to fetch stations",
 				);
 				setStations([]);
 			} finally {
@@ -47,7 +49,7 @@ export function useStationSearch(query: string): StationSearchResult {
 		};
 
 		fetchStations();
-	}, [debouncedQuery]);
+	}, [debouncedQuery, baseUrl]);
 
 	return { stations, loading, error };
 }
