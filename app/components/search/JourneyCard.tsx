@@ -7,6 +7,10 @@ import {
 	isFullJourneyDeutschlandTicketEligible,
 	isDeutschlandTicketEligible,
 } from "@/lib/utils/deutschlandTicket";
+import {
+	createDbBookingUrl,
+	bahnCardCodeFromLoyaltyCard,
+} from "@/lib/utils/createDbUrl";
 
 interface JourneyCardProps {
 	journey: Journey;
@@ -27,7 +31,7 @@ export default function JourneyCard({
 			? new Date(time).toLocaleTimeString("de-DE", {
 					hour: "2-digit",
 					minute: "2-digit",
-			  })
+				})
 			: "??:??";
 	};
 
@@ -128,7 +132,7 @@ export default function JourneyCard({
 									<div className="flex gap-3">
 										<div className="font-bold text-gray-900 w-12 shrink-0">
 											{formatTime(
-												(leg as any).departure || (leg as any).plannedDeparture
+												(leg as any).departure || (leg as any).plannedDeparture,
 											)}
 										</div>
 										<div className="flex-1 text-gray-700">
@@ -150,7 +154,7 @@ export default function JourneyCard({
 									<div className="flex gap-3">
 										<div className="font-bold text-gray-900 w-12 shrink-0">
 											{formatTime(
-												(leg as any).arrival || (leg as any).plannedArrival
+												(leg as any).arrival || (leg as any).plannedArrival,
 											)}
 										</div>
 										<div className="flex-1 text-gray-700">
@@ -164,7 +168,7 @@ export default function JourneyCard({
 									<div className="border-t border-gray-300 mt-3"></div>
 								)}
 							</div>
-						)
+						),
 				)}
 			</div>{" "}
 			{/* Split Ticketing Results (Inline Expansion) */}
@@ -228,78 +232,162 @@ export default function JourneyCard({
 							</div>
 
 							<div className="space-y-3">
-								{result.splits.map((split, idx) => (
-									<div
-										key={idx}
-										className="border-2 border-gray-300 rounded-2xl p-4 hover:border-green-500 transition-colors bg-white"
-									>
-										<div className="flex justify-between items-start mb-3">
-											<div>
-												<p className="font-mono font-bold text-base text-green-600">
-													Spare {split.savings.toFixed(2)} EUR
-												</p>
-												<p className="font-mono text-xs text-gray-600">
-													({split.savingsPercentage.toFixed(1)}% günstiger)
-												</p>
-											</div>
-											<div className="text-right">
-												<p className="font-mono font-bold text-base">
-													{split.totalPrice.toFixed(2)} EUR
-												</p>
-												<p className="font-mono text-xs text-gray-500 line-through">
-													{result.originalPrice.toFixed(2)} EUR
-												</p>
-											</div>
-										</div>{" "}
-										<div className="border-t border-gray-200 pt-3">
-											<p className="font-mono font-semibold mb-2 text-xs text-gray-700">
-												Split-Punkt: {split.splitStation.name}
-											</p>
+								{result.splits.map((split, idx) => {
+									const travelClass = searchParams.firstClass ? 1 : 2;
+									const bahnCard = bahnCardCodeFromLoyaltyCard(
+										searchParams.loyaltyCard,
+									);
+									const hasDTicket = !!searchParams.deutschlandTicketDiscount;
 
-											<div className="space-y-1 font-mono text-xs">
-												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
-													<span className="text-gray-700">
-														{journey.legs[0].origin.name} →{" "}
-														{split.splitStation.name}
-													</span>
-													<span className="font-semibold flex items-center gap-2">
-														{split.firstLegPrice === 0 ? (
-															<>
-																<span className="text-green-600">0.00 EUR</span>
-																<span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
-																	D-Ticket
-																</span>
-															</>
-														) : (
-															`${split.firstLegPrice.toFixed(2)} EUR`
-														)}
-													</span>
+									const firstLegUrl = split.firstLegJourney
+										? createDbBookingUrl(
+												split.firstLegJourney,
+												travelClass,
+												hasDTicket,
+												bahnCard,
+											)
+										: null;
+									const secondLegUrl = split.secondLegJourney
+										? createDbBookingUrl(
+												split.secondLegJourney,
+												travelClass,
+												hasDTicket,
+												bahnCard,
+											)
+										: null;
+
+									return (
+										<div
+											key={idx}
+											className="border-2 border-gray-300 rounded-2xl p-4 hover:border-green-500 transition-colors bg-white"
+										>
+											<div className="flex justify-between items-start mb-3">
+												<div>
+													<p className="font-mono font-bold text-base text-green-600">
+														Spare {split.savings.toFixed(2)} EUR
+													</p>
+													<p className="font-mono text-xs text-gray-600">
+														({split.savingsPercentage.toFixed(1)}% günstiger)
+													</p>
 												</div>
-												<div className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded">
-													<span className="text-gray-700">
-														{split.splitStation.name} →{" "}
-														{
-															journey.legs[journey.legs.length - 1].destination
-																.name
-														}
-													</span>
-													<span className="font-semibold flex items-center gap-2">
-														{split.secondLegPrice === 0 ? (
-															<>
-																<span className="text-green-600">0.00 EUR</span>
-																<span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">
-																	D-Ticket
+												<div className="text-right">
+													<p className="font-mono font-bold text-base">
+														{split.totalPrice.toFixed(2)} EUR
+													</p>
+													<p className="font-mono text-xs text-gray-500 line-through">
+														{result.originalPrice.toFixed(2)} EUR
+													</p>
+												</div>
+											</div>{" "}
+											<div className="border-t border-gray-200 pt-3">
+												<p className="font-mono font-semibold mb-2 text-xs text-gray-700">
+													Split-Punkt: {split.splitStation.name}
+												</p>
+
+												<div className="space-y-2 font-mono text-xs">
+													{/* Segment 1: Origin → Split station */}
+														{firstLegUrl ? (
+															<a
+																href={firstLegUrl}
+																target="_blank"
+																rel="noopener noreferrer"
+																onClick={(e) => e.stopPropagation()}
+																className="flex justify-between items-center py-2 px-2 bg-gray-50 hover:bg-green-50 hover:border-primary border border-transparent rounded-lg transition-colors cursor-pointer"
+															>
+																<span className="text-gray-700">
+																	{journey.legs[0].origin.name} →{" "}
+																	{split.splitStation.name}
 																</span>
-															</>
+																<span className="font-semibold flex items-center gap-1">
+																	{split.firstLegPrice === 0 ? (
+																		<>
+																			<span className="text-green-600">0.00 EUR</span>
+																			<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																				D-Ticket
+																			</span>
+																		</>
+																	) : (
+																		`${split.firstLegPrice.toFixed(2)} EUR`
+																	)}
+																</span>
+															</a>
 														) : (
-															`${split.secondLegPrice.toFixed(2)} EUR`
+															<div className="flex justify-between items-center py-2 px-2 bg-gray-50 rounded-lg">
+																<span className="text-gray-700">
+																	{journey.legs[0].origin.name} →{" "}
+																	{split.splitStation.name}
+																</span>
+																<span className="font-semibold flex items-center gap-1">
+																	{split.firstLegPrice === 0 ? (
+																		<>
+																			<span className="text-green-600">0.00 EUR</span>
+																			<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																				D-Ticket
+																			</span>
+																		</>
+																	) : (
+																		`${split.firstLegPrice.toFixed(2)} EUR`
+																	)}
+																</span>
+															</div>
 														)}
-													</span>
+													{/* Segment 2: Split station → Destination */}
+													{secondLegUrl ? (
+														<a
+															href={secondLegUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+															onClick={(e) => e.stopPropagation()}
+															className="flex justify-between items-center py-2 px-2 bg-gray-50 hover:bg-green-50 hover:border-primary border border-transparent rounded-lg transition-colors cursor-pointer"
+														>
+															<span className="text-gray-700">
+																{split.splitStation.name} →{" "}
+																{
+																	journey.legs[journey.legs.length - 1]
+																		.destination.name
+																}
+															</span>
+															<span className="font-semibold flex items-center gap-1">
+																{split.secondLegPrice === 0 ? (
+																	<>
+																		<span className="text-green-600">0.00 EUR</span>
+																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																			D-Ticket
+																		</span>
+																	</>
+																) : (
+																	`${split.secondLegPrice.toFixed(2)} EUR`
+																)}
+															</span>
+														</a>
+													) : (
+														<div className="flex justify-between items-center py-2 px-2 bg-gray-50 rounded-lg">
+															<span className="text-gray-700">
+																{split.splitStation.name} →{" "}
+																{
+																	journey.legs[journey.legs.length - 1]
+																		.destination.name
+																}
+															</span>
+															<span className="font-semibold flex items-center gap-1">
+																{split.secondLegPrice === 0 ? (
+																	<>
+																		<span className="text-green-600">0.00 EUR</span>
+																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																			D-Ticket
+																		</span>
+																	</>
+																) : (
+																	`${split.secondLegPrice.toFixed(2)} EUR`
+																)}
+															</span>
+														</div>
+													)}
 												</div>
 											</div>
 										</div>
-									</div>
-								))}
+									);
+								})}
 							</div>
 						</div>
 					)}
