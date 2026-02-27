@@ -306,6 +306,30 @@ export function useSplit() {
 						firstLegResult.journey &&
 						secondLegResult.journey
 					) {
+						// Validate timing: second leg must depart AFTER first leg arrives at the split station
+						const arrivalAtSplit = stopover.arrival || stopover.plannedArrival;
+						const secondLegFirstLeg = secondLegResult.journey.legs[0] as any;
+						const secondLegDeparture =
+							secondLegFirstLeg?.departure ||
+							secondLegFirstLeg?.plannedDeparture;
+
+						if (arrivalAtSplit && secondLegDeparture) {
+							const arrivalTime = new Date(arrivalAtSplit).getTime();
+							const departureTime = new Date(secondLegDeparture).getTime();
+
+							if (departureTime < arrivalTime) {
+								console.log(
+									`   INVALID CONNECTION: Second leg departs at ${secondLegDeparture} before first leg arrives at ${arrivalAtSplit} – skipping`,
+								);
+								checkedCount++;
+								setResult((prev) => ({
+									...prev,
+									checkedStations: checkedCount,
+								}));
+								continue;
+							}
+						}
+
 						console.log(
 							`   Got prices: ${(firstLegResult.price / 100).toFixed(
 								2,
