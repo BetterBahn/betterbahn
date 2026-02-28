@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SearchHistory } from "./SearchHistory";
 import { URLInput } from "./URLInput";
 import { useLocalStorage } from "./useLocalStorage";
+import { useSearchHistory } from "./useSearchHistory";
 
 export const SearchForm = () => {
 	const router = useRouter();
@@ -23,6 +25,8 @@ export const SearchForm = () => {
 	);
 
 	const [travelClass, setTravelClass] = useLocalStorage("travelClass", "2");
+
+	const { history, removeFromHistory, clearHistory } = useSearchHistory();
 
 	const handleUrlParsingAndNavigation = () => {
 		if (!url.trim()) {
@@ -114,6 +118,7 @@ export const SearchForm = () => {
 				</div>
 
 				<button
+					type="button"
 					onClick={handleUrlParsingAndNavigation}
 					disabled={!url.trim()}
 					className="w-full bg-primary text-white py-3 px-4 rounded-full hover:cursor-pointer hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg font-semibold"
@@ -127,6 +132,12 @@ export const SearchForm = () => {
 					<strong>Fehler:</strong> {urlParseError}
 				</div>
 			)}
+
+			<SearchHistory
+				history={history}
+				onRemove={removeFromHistory}
+				onClear={clearHistory}
+			/>
 		</section>
 	);
 };
