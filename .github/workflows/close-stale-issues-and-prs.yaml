@@ -13,6 +13,7 @@ jobs:
       - uses: actions/stale@v10
         with:
           exempt-issue-labels: do-not-stale,enhancement
+          exempt-pr-labels: do-not-stale
           days-before-stale: 30
           days-before-close: 14
           stale-issue-message: "This issue is stale because it has been open for 30 days with no activity. It will be closed in 14 days if there is no activity."
