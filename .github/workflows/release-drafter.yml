@@ -5,10 +5,13 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: read
+
+
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
