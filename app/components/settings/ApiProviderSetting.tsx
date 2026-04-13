@@ -91,7 +91,7 @@ export default function ApiProviderSetting() {
 	const isCustomUrl = value !== DEFAULT_API_BASE_URL;
 
 	return (
-		<div ref={panelRef} className="fixed top-4 right-4 z-50 font-mono text-sm">
+		<div ref={panelRef} className="relative font-mono text-sm">
 			{!open ? (
 				<button
 					type="button"

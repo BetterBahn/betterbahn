@@ -2,12 +2,10 @@ import { Suspense } from "react";
 import SearchContainer from "@/app/components/search/SearchContainer";
 import SearchResults from "@/app/components/search/searchResults";
 import Hero from "@/app/components/layout/heroImage";
-import ApiProviderSetting from "@/app/components/settings/ApiProviderSetting";
 
 export default function Home() {
 	return (
 		<main>
-			<ApiProviderSetting />
 			<Hero />
 			<Suspense
 				fallback={

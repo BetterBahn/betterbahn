@@ -6,16 +6,17 @@ import SearchForm from "./searchForm";
 import ShareLinkInput from "./ShareLinkInput";
 
 export default function SearchContainer() {
-	const [searchMethod, setSearchMethod] = useState<"form" | "link">("form");
+	// const [searchMethod, setSearchMethod] = useState<"form" | "link">("form");
 
 	return (
 		<div className="w-full">
-			<SearchMethodToggle
+			{/* <SearchMethodToggle
 				activeMethod={searchMethod}
 				onToggle={setSearchMethod}
 			/>
 
-			{searchMethod === "link" ? <ShareLinkInput /> : <SearchForm />}
+			{searchMethod === "link" ? <ShareLinkInput /> : <SearchForm />} */}
+			<ShareLinkInput />
 		</div>
 	);
 }
