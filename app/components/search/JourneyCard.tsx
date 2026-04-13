@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Journey, JourneySearchParams } from "@/lib/types";
 import { useSplit } from "@/lib/hooks/useSplit";
 import {
@@ -16,15 +16,26 @@ interface JourneyCardProps {
 	journey: Journey;
 	index: number;
 	searchParams: JourneySearchParams;
+	autoExpand?: boolean;
 }
 
 export default function JourneyCard({
 	journey,
 	index,
 	searchParams,
+	autoExpand,
 }: JourneyCardProps) {
 	const [showSplitResults, setShowSplitResults] = useState(false);
 	const { result, checkSplitOptions } = useSplit();
+
+	// Bei autoExpand direkt Split-Analyse starten
+	useEffect(() => {
+		if (autoExpand) {
+			setShowSplitResults(true);
+			checkSplitOptions(journey, searchParams);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [autoExpand]);
 
 	const formatTime = (time: string | undefined) => {
 		return time
@@ -286,51 +297,55 @@ export default function JourneyCard({
 
 												<div className="space-y-2 font-mono text-xs">
 													{/* Segment 1: Origin → Split station */}
-														{firstLegUrl ? (
-															<a
-																href={firstLegUrl}
-																target="_blank"
-																rel="noopener noreferrer"
-																onClick={(e) => e.stopPropagation()}
-																className="flex justify-between items-center py-2 px-2 bg-gray-50 hover:bg-green-50 hover:border-primary border border-transparent rounded-lg transition-colors cursor-pointer"
-															>
-																<span className="text-gray-700">
-																	{journey.legs[0].origin.name} →{" "}
-																	{split.splitStation.name}
-																</span>
-																<span className="font-semibold flex items-center gap-1">
-																	{split.firstLegPrice === 0 ? (
-																		<>
-																			<span className="text-green-600">0.00 EUR</span>
-																			<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
-																				D-Ticket
-																			</span>
-																		</>
-																	) : (
-																		`${split.firstLegPrice.toFixed(2)} EUR`
-																	)}
-																</span>
-															</a>
-														) : (
-															<div className="flex justify-between items-center py-2 px-2 bg-gray-50 rounded-lg">
-																<span className="text-gray-700">
-																	{journey.legs[0].origin.name} →{" "}
-																	{split.splitStation.name}
-																</span>
-																<span className="font-semibold flex items-center gap-1">
-																	{split.firstLegPrice === 0 ? (
-																		<>
-																			<span className="text-green-600">0.00 EUR</span>
-																			<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
-																				D-Ticket
-																			</span>
-																		</>
-																	) : (
-																		`${split.firstLegPrice.toFixed(2)} EUR`
-																	)}
-																</span>
-															</div>
-														)}
+													{firstLegUrl ? (
+														<a
+															href={firstLegUrl}
+															target="_blank"
+															rel="noopener noreferrer"
+															onClick={(e) => e.stopPropagation()}
+															className="flex justify-between items-center py-2 px-2 bg-gray-50 hover:bg-green-50 hover:border-primary border border-transparent rounded-lg transition-colors cursor-pointer"
+														>
+															<span className="text-gray-700">
+																{journey.legs[0].origin.name} →{" "}
+																{split.splitStation.name}
+															</span>
+															<span className="font-semibold flex items-center gap-1">
+																{split.firstLegPrice === 0 ? (
+																	<>
+																		<span className="text-green-600">
+																			0.00 EUR
+																		</span>
+																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																			D-Ticket
+																		</span>
+																	</>
+																) : (
+																	`${split.firstLegPrice.toFixed(2)} EUR`
+																)}
+															</span>
+														</a>
+													) : (
+														<div className="flex justify-between items-center py-2 px-2 bg-gray-50 rounded-lg">
+															<span className="text-gray-700">
+																{journey.legs[0].origin.name} →{" "}
+																{split.splitStation.name}
+															</span>
+															<span className="font-semibold flex items-center gap-1">
+																{split.firstLegPrice === 0 ? (
+																	<>
+																		<span className="text-green-600">
+																			0.00 EUR
+																		</span>
+																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
+																			D-Ticket
+																		</span>
+																	</>
+																) : (
+																	`${split.firstLegPrice.toFixed(2)} EUR`
+																)}
+															</span>
+														</div>
+													)}
 													{/* Segment 2: Split station → Destination */}
 													{secondLegUrl ? (
 														<a
@@ -350,7 +365,9 @@ export default function JourneyCard({
 															<span className="font-semibold flex items-center gap-1">
 																{split.secondLegPrice === 0 ? (
 																	<>
-																		<span className="text-green-600">0.00 EUR</span>
+																		<span className="text-green-600">
+																			0.00 EUR
+																		</span>
 																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
 																			D-Ticket
 																		</span>
@@ -372,7 +389,9 @@ export default function JourneyCard({
 															<span className="font-semibold flex items-center gap-1">
 																{split.secondLegPrice === 0 ? (
 																	<>
-																		<span className="text-green-600">0.00 EUR</span>
+																		<span className="text-green-600">
+																			0.00 EUR
+																		</span>
 																		<span className="text-green-600 bg-green-100 px-1.5 py-0.5 rounded">
 																			D-Ticket
 																		</span>

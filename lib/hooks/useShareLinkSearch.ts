@@ -80,6 +80,20 @@ export function useShareLinkSearch() {
 				// Always request tickets info
 				params.set("tickets", "true");
 
+				// Match-Daten für automatische Erkennung in den Ergebnissen speichern
+				if (typeof window !== "undefined") {
+					sessionStorage.setItem(
+						"shareMatchData",
+						JSON.stringify({
+							departureTime: parsed.departureTime,
+							arrivalTime: parsed.arrivalTime,
+							trainNames: parsed.trainNames,
+							departurePlatform: parsed.departurePlatform,
+							arrivalPlatform: parsed.arrivalPlatform,
+						}),
+					);
+				}
+
 				// Status zurücksetzen bevor Navigation
 				setStatus("idle");
 

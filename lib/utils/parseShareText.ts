@@ -2,6 +2,11 @@ export interface ParsedShareText {
 	originName: string;
 	destinationName: string;
 	departure: Date; // kombiniertes Datum + Uhrzeit
+	departureTime: string; // "HH:MM"
+	arrivalTime?: string; // "HH:MM"
+	departurePlatform?: string;
+	arrivalPlatform?: string;
+	trainNames: string[]; // z.B. ["IC 2036", "ICE 771"]
 }
 
 /**
@@ -18,12 +23,14 @@ export function parseShareText(text: string): ParsedShareText {
 	const dateMatch = text.match(
 		/Verbindung am \w+\.?\s+(\d{2})\.(\d{2})\.(\d{4})/,
 	);
-	// Origin aus "• von Magdeburg Hbf, Abfahrt 15:01 Uhr"
+	// Origin aus "• von Magdeburg Hbf, Abfahrt 15:01 Uhr Gl. 6 mit IC 2036"
 	const originMatch = text.match(
-		/[•·]\s*von (.+?),\s*Abfahrt (\d{2}:\d{2}) Uhr/,
+		/[•·]\s*von (.+?),\s*Abfahrt (\d{2}:\d{2}) Uhr(?:\s+Gl\.?\s*(\S+))?/,
 	);
-	// Destination aus "• nach Oldenburg(Oldb)Hbf, Ankunft"
-	const destMatch = text.match(/[•·]\s*nach (.+?),\s*Ankunft/);
+	// Destination aus "• nach Oldenburg(Oldb)Hbf, Ankunft 18:23 Uhr Gl. 6"
+	const destMatch = text.match(
+		/[•·]\s*nach (.+?),\s*Ankunft(?:\s+(\d{2}:\d{2})\s+Uhr)?(?:\s+Gl\.?\s*(\S+))?/,
+	);
 
 	if (!dateMatch || !originMatch || !destMatch) {
 		throw new Error(
@@ -32,8 +39,8 @@ export function parseShareText(text: string): ParsedShareText {
 	}
 
 	const [, day, month, year] = dateMatch;
-	const [, originName, time] = originMatch;
-	const [, destinationName] = destMatch;
+	const [, originName, time, departurePlatform] = originMatch;
+	const [, destinationName, arrivalTime, arrivalPlatform] = destMatch;
 	const [hours, minutes] = time.split(":").map(Number);
 
 	const departure = new Date(
@@ -44,9 +51,27 @@ export function parseShareText(text: string): ParsedShareText {
 		minutes,
 	);
 
+	// Zugnamen aus allen Aufzählungszeilen extrahieren
+	const trainNames: string[] = [];
+	for (const line of text.split(/\r?\n/)) {
+		if (!/[•·]/.test(line)) continue;
+		const m = line.match(/\bmit\s+(.+?)\s*$/);
+		if (m) {
+			const name = m[1].trim();
+			if (name && !trainNames.includes(name)) {
+				trainNames.push(name);
+			}
+		}
+	}
+
 	return {
 		originName: originName.trim(),
 		destinationName: destinationName.trim(),
 		departure,
+		departureTime: time,
+		arrivalTime: arrivalTime || undefined,
+		departurePlatform: departurePlatform || undefined,
+		arrivalPlatform: arrivalPlatform || undefined,
+		trainNames,
 	};
 }
