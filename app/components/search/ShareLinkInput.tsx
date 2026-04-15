@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useShareLinkSearch } from "@/lib/hooks/useShareLinkSearch";
-import { ShareLinkHelpSection } from "./ShareLinkHelpSection";
 
 // Cookie utility functions (identisch zu searchForm.tsx)
 const setCookie = (name: string, value: string, days: number = 365) => {
@@ -22,10 +21,7 @@ const getCookie = (name: string): string | null => {
 	return null;
 };
 
-const PLACEHOLDER = `Verbindung am Di. 02.12.2025
-• von Magdeburg Hbf, Abfahrt 15:01 Uhr Gl. 6 mit IC 2036
-• nach Oldenburg(Oldb)Hbf, Ankunft 18:23 Uhr Gl. 6 mit IC 2036
-Verbindung ansehen: https://www.bahn.de/buchung/start?vbid=...`;
+const PLACEHOLDER = `Füge hier den Text ein, den du von der Bahn kopiert hast. Er enthält alle Informationen zu deiner geplanten Verbindung, damit wir sie für dich suchen können.`;
 
 export default function ShareLinkInput() {
 	const [text, setText] = useState("");
@@ -36,7 +32,6 @@ export default function ShareLinkInput() {
 	const [hasDTicket, setHasDTicket] = useState<boolean>(false);
 	const [trainClass, setTrainClass] = useState<string>("2");
 	const [bahncard, setBahncard] = useState<string>("none");
-	const [showHelp, setShowHelp] = useState<boolean>(false);
 	const [showOptions, setShowOptions] = useState<boolean>(false);
 
 	// Präferenzen aus Cookies laden
@@ -72,24 +67,12 @@ export default function ShareLinkInput() {
 					value={text}
 					onChange={(e) => setText(e.target.value)}
 					placeholder={PLACEHOLDER}
-					rows={5}
+					rows={4}
 					disabled={isResolving}
 					aria-label="DB-Teilen-Text einfügen"
 					className="w-full p-4 border-2 border-gray-200 rounded-3xl resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				/>
 			</div>
-
-			{/* Hilfe-Toggle */}
-			<button
-				type="button"
-				onClick={() => setShowHelp((v) => !v)}
-				className="text-sm font-medium text-gray-500 hover:text-gray-700 font-mono self-start flex items-center gap-1"
-				aria-expanded={showHelp}
-			>
-				<span>{showHelp ? "▲" : "▼"}</span> Wie kopiere ich den Text?
-			</button>
-
-			{showHelp && <ShareLinkHelpSection />}
 
 			{/* Optionen */}
 			<div className="bg-gray-50 rounded-2xl border-2 border-gray-200 overflow-hidden">

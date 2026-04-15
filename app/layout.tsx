@@ -14,8 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "BetterBahn - PWA",
-	description: "Eine Progressive Web App für BetterBahn",
+	title: "BetterBahn",
+	description:
+		"Günstigere Zugverbindungen mit Split-Ticketing und Deutschland-Ticket",
+	manifest: "/manifest.json",
+	appleWebApp: {
+		capable: true,
+		statusBarStyle: "default",
+		title: "BetterBahn",
+	},
 };
 
 export default function RootLayout({
@@ -25,6 +32,11 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="de">
+			<head>
+				<meta name="theme-color" content="#4b6058" />
+				<meta name="mobile-web-app-capable" content="yes" />
+				<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased container mx-auto px-2 max-w-4xl pt-14`}
 			>

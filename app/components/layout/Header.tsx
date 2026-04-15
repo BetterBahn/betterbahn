@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import ApiProviderSetting from "@/app/components/settings/ApiProviderSetting";
+import { usePwaInstall } from "@/lib/hooks/usePwaInstall";
 
 const NAV_ITEMS = [
 	{ label: "Infos", href: "/infos" },
 	{ label: "Unterstützen", href: "/unterstuetzen" },
+	{ label: "Einstellungen", href: "/einstellungen" },
 	{ label: "Impressum", href: "/impressum" },
 	{ label: "Datenschutz", href: "/datenschutz" },
 ];
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
 export default function Header() {
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const drawerRef = useRef<HTMLDivElement>(null);
+	const { canInstall, triggerInstall } = usePwaInstall();
 
 	// Prevent body scroll when drawer is open
 	useEffect(() => {
@@ -136,12 +138,36 @@ export default function Header() {
 							</Link>
 						</li>
 					))}
+					{canInstall && (
+						<li>
+							<button
+								type="button"
+								onClick={() => {
+									triggerInstall();
+									setDrawerOpen(false);
+								}}
+								className="w-full flex items-center gap-3 py-3 px-3 rounded-xl text-base font-medium text-primary hover:bg-gray-50 transition-colors cursor-pointer"
+							>
+								<svg
+									width="20"
+									height="20"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									aria-hidden="true"
+								>
+									<path d="M12 3v12" />
+									<path d="M8 11l4 4 4-4" />
+									<path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+								</svg>
+								App installieren
+							</button>
+						</li>
+					)}
 				</ul>
-
-				{/* API Provider Setting */}
-				<div className="absolute bottom-0 left-0 right-0 px-5 py-5 border-t border-gray-100">
-					<ApiProviderSetting />
-				</div>
 			</nav>
 		</>
 	);
