@@ -1,56 +1,135 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useShareLinkSearch } from "@/lib/hooks/useShareLinkSearch";
-
-// Cookie utility functions (identisch zu searchForm.tsx)
-const setCookie = (name: string, value: string, days: number = 365) => {
-	const expires = new Date();
-	expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-	document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-};
-
-const getCookie = (name: string): string | null => {
-	const nameEQ = name + "=";
-	const ca = document.cookie.split(";");
-	for (let i = 0; i < ca.length; i++) {
-		let c = ca[i];
-		while (c.charAt(0) === " ") c = c.substring(1, c.length);
-		if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-	}
-	return null;
-};
+import {
+	setCookie,
+	getCookie,
+	deleteCookie,
+	getInitialCookieValue,
+} from "@/lib/utils/cookieUtils";
 
 const PLACEHOLDER = `Füge hier den Text ein, den du von der Bahn kopiert hast. Er enthält alle Informationen zu deiner geplanten Verbindung, damit wir sie für dich suchen können.`;
+
+const COOKIE_KEYS = {
+	age: "shareLink_age",
+	hasDTicket: "shareLink_hasDTicket",
+	trainClass: "shareLink_trainClass",
+	bahncard: "shareLink_bahncard",
+	splitIncludeTransfer: "shareLink_splitIncludeTransfer",
+	splitAllowOtherTrains: "shareLink_splitAllowOtherTrains",
+	splitMaxArrivalDeviation: "shareLink_splitMaxArrivalDeviation",
+} as const;
+
+const LEGACY_COOKIE_KEYS = {
+	age: "searchForm_age",
+	hasDTicket: "searchForm_hasDTicket",
+	trainClass: "searchForm_trainClass",
+	bahncard: "searchForm_bahncard",
+	splitIncludeTransfer: "split_includeTransfer",
+	splitAllowOtherTrains: "split_allowOtherTrains",
+	splitMaxArrivalDeviation: "split_maxArrivalDeviation",
+} as const;
 
 export default function ShareLinkInput() {
 	const [text, setText] = useState("");
 	const { search, status, error } = useShareLinkSearch();
 
-	// Präferenzen aus Cookies (identisch zu searchForm.tsx)
-	const [age, setAge] = useState<string>("");
-	const [hasDTicket, setHasDTicket] = useState<boolean>(false);
-	const [trainClass, setTrainClass] = useState<string>("2");
-	const [bahncard, setBahncard] = useState<string>("none");
+	// Präferenzen aus Cookies
+	const [age, setAge] = useState<string>(
+		() => getInitialCookieValue(COOKIE_KEYS.age, LEGACY_COOKIE_KEYS.age) || "",
+	);
+	const [hasDTicket, setHasDTicket] = useState<boolean>(
+		() =>
+			getInitialCookieValue(
+				COOKIE_KEYS.hasDTicket,
+				LEGACY_COOKIE_KEYS.hasDTicket,
+			) === "true",
+	);
+	const [trainClass, setTrainClass] = useState<string>(
+		() =>
+			getInitialCookieValue(
+				COOKIE_KEYS.trainClass,
+				LEGACY_COOKIE_KEYS.trainClass,
+			) || "2",
+	);
+	const [bahncard, setBahncard] = useState<string>(
+		() =>
+			getInitialCookieValue(
+				COOKIE_KEYS.bahncard,
+				LEGACY_COOKIE_KEYS.bahncard,
+			) || "none",
+	);
 	const [showOptions, setShowOptions] = useState<boolean>(false);
+	const [splitIncludeTransferStations, setSplitIncludeTransferStations] =
+		useState<boolean>(
+			() =>
+				getInitialCookieValue(
+					COOKIE_KEYS.splitIncludeTransfer,
+					LEGACY_COOKIE_KEYS.splitIncludeTransfer,
+				) === "true",
+		);
+	const [splitAllowOtherTrains, setSplitAllowOtherTrains] = useState<boolean>(
+		() =>
+			getInitialCookieValue(
+				COOKIE_KEYS.splitAllowOtherTrains,
+				LEGACY_COOKIE_KEYS.splitAllowOtherTrains,
+			) === "true",
+	);
+	const [splitMaxArrivalDeviation, setSplitMaxArrivalDeviation] =
+		useState<number>(() =>
+			Number(
+				getInitialCookieValue(
+					COOKIE_KEYS.splitMaxArrivalDeviation,
+					LEGACY_COOKIE_KEYS.splitMaxArrivalDeviation,
+				) || "60",
+			),
+		);
 
-	// Präferenzen aus Cookies laden
 	useEffect(() => {
-		const savedAge = getCookie("searchForm_age");
-		const savedDTicket = getCookie("searchForm_hasDTicket");
-		const savedTrainClass = getCookie("searchForm_trainClass");
-		const savedBahncard = getCookie("searchForm_bahncard");
+		const migrateKey = (key: string, legacyKey: string) => {
+			if (getCookie(key) !== null) return;
+			const legacyValue = getCookie(legacyKey);
+			if (legacyValue !== null) {
+				setCookie(key, legacyValue);
+			}
+		};
 
-		if (savedAge) setAge(savedAge);
-		if (savedDTicket) setHasDTicket(savedDTicket === "true");
-		if (savedTrainClass) setTrainClass(savedTrainClass);
-		if (savedBahncard) setBahncard(savedBahncard);
+		migrateKey(COOKIE_KEYS.age, LEGACY_COOKIE_KEYS.age);
+		migrateKey(COOKIE_KEYS.hasDTicket, LEGACY_COOKIE_KEYS.hasDTicket);
+		migrateKey(COOKIE_KEYS.trainClass, LEGACY_COOKIE_KEYS.trainClass);
+		migrateKey(COOKIE_KEYS.bahncard, LEGACY_COOKIE_KEYS.bahncard);
+		migrateKey(
+			COOKIE_KEYS.splitIncludeTransfer,
+			LEGACY_COOKIE_KEYS.splitIncludeTransfer,
+		);
+		migrateKey(
+			COOKIE_KEYS.splitAllowOtherTrains,
+			LEGACY_COOKIE_KEYS.splitAllowOtherTrains,
+		);
+		migrateKey(
+			COOKIE_KEYS.splitMaxArrivalDeviation,
+			LEGACY_COOKIE_KEYS.splitMaxArrivalDeviation,
+		);
+
+		// Cleanup: legacy cookie names are no longer used after migration.
+		Object.values(LEGACY_COOKIE_KEYS).forEach((legacyKey) => {
+			deleteCookie(legacyKey);
+		});
 	}, []);
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!text.trim()) return;
-		search(text, { age, hasDTicket, trainClass, bahncard });
+		search(text, {
+			age,
+			hasDTicket,
+			trainClass,
+			bahncard,
+			splitIncludeTransferStations,
+			splitAllowOtherTrains,
+			splitMaxArrivalDeviation,
+		});
 	};
 
 	const isResolving = status === "resolving";
@@ -78,49 +157,50 @@ export default function ShareLinkInput() {
 			<div className="bg-gray-50 rounded-2xl border-2 border-gray-200 overflow-hidden">
 				{/* Options toggle */}
 				{!showOptions && (
-					<div className="flex items-center justify-center px-4 py-3">
-						<button
-							type="button"
-							onClick={() => setShowOptions(true)}
-							className="text-sm font-medium text-gray-600 hover:text-gray-800 font-mono flex items-center gap-1"
-							aria-label="Optionen anzeigen"
-						>
-							<span>▼</span> Optionen
-						</button>
-					</div>
+					<button
+						type="button"
+						onClick={() => setShowOptions(true)}
+						className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 font-mono gap-1 transition-colors"
+						aria-label="Optionen anzeigen"
+					>
+						<span>▼</span> Optionen
+					</button>
 				)}
 
 				{showOptions && (
 					<>
 						{/* Hide options button */}
-						<div className="flex items-center justify-center px-4 py-3 bg-gray-100 border-b border-gray-200">
-							<button
-								type="button"
-								onClick={() => setShowOptions(false)}
-								className="text-sm font-medium text-gray-600 hover:text-gray-800 font-mono flex items-center gap-1"
-								aria-label="Optionen ausblenden"
-							>
-								<span>▲</span> Optionen ausblenden
-							</button>
-						</div>
+						<button
+							type="button"
+							onClick={() => setShowOptions(false)}
+							className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 border-b border-gray-200 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 font-mono gap-1 transition-colors"
+							aria-label="Optionen ausblenden"
+						>
+							<span>▲</span> Optionen ausblenden
+						</button>
 
 						{/* Deutschlandticket */}
 						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
-							<label className="text-base font-medium text-gray-700 font-mono">
+							<label
+								htmlFor="share-hasDTicket"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
 								Deutschlandticket
 							</label>
-							<button
-								type="button"
-								onClick={() => {
-									const newValue = !hasDTicket;
-									setHasDTicket(newValue);
-									setCookie("searchForm_hasDTicket", newValue.toString());
+							<select
+								id="share-hasDTicket"
+								value={hasDTicket ? "true" : "false"}
+								onChange={(e) => {
+									const val = e.target.value === "true";
+									setHasDTicket(val);
+									setCookie(COOKIE_KEYS.hasDTicket, val.toString());
 								}}
-								className="text-right text-base font-bold font-mono bg-transparent hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded px-2"
-								aria-label="Deutschland-Ticket umschalten"
+								aria-label="Deutschland-Ticket auswählen"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
 							>
-								{hasDTicket ? "Ja!" : "Nein"}
-							</button>
+								<option value="false">Nein</option>
+								<option value="true">Ja</option>
+							</select>
 						</div>
 
 						{/* Bahncard */}
@@ -137,7 +217,7 @@ export default function ShareLinkInput() {
 								onChange={(e) => {
 									const value = e.target.value;
 									setBahncard(value);
-									setCookie("searchForm_bahncard", value);
+									setCookie(COOKIE_KEYS.bahncard, value);
 								}}
 								aria-label="Bahncard-Typ auswählen"
 								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
@@ -166,7 +246,7 @@ export default function ShareLinkInput() {
 								onChange={(e) => {
 									const value = e.target.value;
 									setTrainClass(value);
-									setCookie("searchForm_trainClass", value);
+									setCookie(COOKIE_KEYS.trainClass, value);
 								}}
 								aria-label="Reiseklasse auswählen"
 								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
@@ -177,7 +257,7 @@ export default function ShareLinkInput() {
 						</div>
 
 						{/* Alter */}
-						<div className="flex items-center justify-between px-4 py-4">
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
 							<label
 								htmlFor="share-age"
 								className="text-base font-medium text-gray-700 font-mono"
@@ -191,7 +271,7 @@ export default function ShareLinkInput() {
 								onChange={(e) => {
 									const value = e.target.value;
 									setAge(value);
-									setCookie("searchForm_age", value);
+									setCookie(COOKIE_KEYS.age, value);
 								}}
 								min="0"
 								max="120"
@@ -200,6 +280,86 @@ export default function ShareLinkInput() {
 								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-20"
 							/>
 						</div>
+
+						{/* Umstiegsbahnhöfe einbeziehen */}
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+							<label
+								htmlFor="share-splitIncludeTransfer"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
+								Auch an Umstiegsbahnhöfen teilen
+							</label>
+							<select
+								id="share-splitIncludeTransfer"
+								value={splitIncludeTransferStations ? "true" : "false"}
+								onChange={(e) => {
+									const val = e.target.value === "true";
+									setSplitIncludeTransferStations(val);
+									setCookie(COOKIE_KEYS.splitIncludeTransfer, val.toString());
+								}}
+								aria-label="Auch an Umstiegsbahnhöfen splitten"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+							>
+								<option value="false">Nein</option>
+								<option value="true">Ja</option>
+							</select>
+						</div>
+
+						{/* Andere Züge erlauben */}
+						<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+							<label
+								htmlFor="share-splitAllowOtherTrains"
+								className="text-base font-medium text-gray-700 font-mono"
+							>
+								Andere Züge erlauben
+							</label>
+							<select
+								id="share-splitAllowOtherTrains"
+								value={splitAllowOtherTrains ? "true" : "false"}
+								onChange={(e) => {
+									const val = e.target.value === "true";
+									setSplitAllowOtherTrains(val);
+									setCookie(COOKIE_KEYS.splitAllowOtherTrains, val.toString());
+								}}
+								aria-label="Andere Züge für geteiltes Ticket erlauben"
+								className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 cursor-pointer"
+							>
+								<option value="false">Nein</option>
+								<option value="true">Ja</option>
+							</select>
+						</div>
+
+						{/* Max. Abweichung (nur wenn andere Züge erlaubt) */}
+						{splitAllowOtherTrains && (
+							<div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+								<label
+									htmlFor="share-splitMaxArrivalDeviation"
+									className="text-base font-medium text-gray-700 font-mono"
+								>
+									Max. Ankunftsabweichung
+								</label>
+								<div className="flex items-center gap-1">
+									<input
+										id="share-splitMaxArrivalDeviation"
+										type="number"
+										value={splitMaxArrivalDeviation}
+										onChange={(e) => {
+											const val = Math.max(1, Number(e.target.value));
+											setSplitMaxArrivalDeviation(val);
+											setCookie(
+												COOKIE_KEYS.splitMaxArrivalDeviation,
+												String(val),
+											);
+										}}
+										min="1"
+										max="240"
+										aria-label="Maximale Ankunftsabweichung in Minuten"
+										className="text-right text-base font-bold font-mono bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary rounded px-2 w-16"
+									/>
+									<span className="text-sm font-mono text-gray-500">Min.</span>
+								</div>
+							</div>
+						)}
 					</>
 				)}
 			</div>

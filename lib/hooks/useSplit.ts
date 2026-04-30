@@ -1,426 +1,463 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useApiBaseUrl } from "@/lib/hooks/useApiBaseUrl";
+import { useCallback, useRef, useState } from "react";
+import { useApiBaseUrl } from "./useApiBaseUrl";
 import type {
 	Journey,
 	JourneyLeg,
 	JourneySearchParams,
-	SplitOption,
 	SplitTicketingResult,
-	Stopover,
+	SplitOption,
+	StopoverStation,
 } from "@/lib/types";
-import { calculateLegPrice } from "@/lib/utils/deutschlandTicket";
+import { isFullJourneyDeutschlandTicketEligible } from "@/lib/utils/deutschlandTicket";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function departureOf(leg: JourneyLeg): string | undefined {
+	return leg.departure ?? leg.plannedDeparture ?? undefined;
+}
+
+function arrivalOf(leg: JourneyLeg): string | undefined {
+	return leg.arrival ?? leg.plannedArrival ?? undefined;
+}
+
+/** Returns b − a in minutes (positive = b is later). */
+function diffMinutes(a: string, b: string): number {
+	return (new Date(b).getTime() - new Date(a).getTime()) / 60_000;
+}
 
 /**
- * Hook to find cheaper ticket prices by splitting a journey at intermediate stopovers
- *
- * @param journey - The original journey to check for split options
- * @param searchParams - The original search parameters used to find the journey
- * @returns Object containing split options, loading state, and error
+ * Extract unique non-transfer intermediate stopovers from the journey.
+ * Deduplicates by station ID to handle walking-leg repeats.
  */
-export function useSplit() {
-	const [result, setResult] = useState<SplitTicketingResult>({
-		originalPrice: 0,
-		splits: [],
-		loading: false,
-		error: null,
-		checkedStations: 0,
-		totalStations: 0,
-	});
-	const baseUrl = useApiBaseUrl();
+function extractSplitCandidates(
+	journey: Journey,
+	includeTransferStations: boolean,
+): StopoverStation[] {
+	const seen = new Set<string>();
+	const candidates: StopoverStation[] = [];
 
-	/**
-	 * Extract all stopovers from all legs of the journey
-	 */
-	const extractStopovers = useCallback((journey: Journey): Stopover[] => {
-		const allStopovers: Stopover[] = [];
+	const originId = journey.legs[0].origin.id ?? "";
+	const destId = journey.legs[journey.legs.length - 1].destination.id ?? "";
 
-		journey.legs.forEach((leg) => {
-			if (leg.stopovers && leg.stopovers.length > 0) {
-				// Skip first and last stopover (origin and destination of the leg)
-				// as they're already covered by leg boundaries
-				const intermediateStops = leg.stopovers.slice(1, -1);
-				allStopovers.push(...intermediateStops);
-			}
-		});
+	// IDs of transfer stations (leg-destination = next leg-origin)
+	const transferIds = new Set<string>();
+	for (let i = 0; i < journey.legs.length - 1; i++) {
+		const id = journey.legs[i].destination.id;
+		if (id) transferIds.add(id);
+	}
 
-		// Also add transfer points between legs (where one leg ends and another begins)
-		if (journey.legs.length > 1) {
-			journey.legs.forEach((leg, index) => {
-				if (index < journey.legs.length - 1) {
-					// Add the destination of this leg as a potential split point
-					allStopovers.push({
-						stop: {
-							id: leg.destination.id || "",
-							name: leg.destination.name,
-							type: leg.destination.type,
-						},
-						arrival: leg.arrival,
-						plannedArrival: leg.plannedArrival,
-						departure: journey.legs[index + 1].departure,
-						plannedDeparture: journey.legs[index + 1].plannedDeparture,
-					});
-				}
-			});
+	for (const leg of journey.legs) {
+		if (!leg.stopovers) continue;
+		for (const stopover of leg.stopovers) {
+			const stop = stopover.stop;
+			if (!stop?.id) continue;
+			if (stop.id === originId || stop.id === destId) continue;
+			if (seen.has(stop.id)) continue;
+			if (!includeTransferStations && transferIds.has(stop.id)) continue;
+			seen.add(stop.id);
+			candidates.push(stop);
 		}
+	}
 
-		return allStopovers;
-	}, []);
+	return candidates;
+}
 
-	/**
-	 * Fetch journey price for a specific route
-	 */
-	const fetchJourneyPrice = useCallback(
-		async (
-			fromStationId: string,
-			toStationId: string,
-			departure: string,
-			searchParams: JourneySearchParams,
-		): Promise<{ price: number | null; journey: Journey | null }> => {
-			try {
-				// Build API URL with search parameters
-				const params = new URLSearchParams({
-					from: fromStationId,
-					to: toStationId,
-					departure: departure,
-					results: "3", // Get multiple results to find matching journey
-					stopovers: "true", // Need stopovers for validation
-					...(searchParams.age && { age: searchParams.age }),
-					...(searchParams.deutschlandTicketDiscount && {
-						"deutschlandTicket.discount": "true",
-					}),
-					...(searchParams.firstClass && { firstClass: "true" }),
-					...(searchParams.loyaltyCard && {
-						loyaltyCard: searchParams.loyaltyCard,
-					}),
-					tickets: "true", // Always get ticket prices
-				});
-
-				const apiUrl = `${baseUrl}/journeys?${params.toString()}`;
-				const response = await fetch(apiUrl);
-
-				if (!response.ok) {
-					console.error(`API error for ${fromStationId} -> ${toStationId}`);
-					return { price: null, journey: null };
-				}
-
-				const data = await response.json();
-
-				if (data.journeys && data.journeys.length > 0) {
-					const journey = data.journeys[0];
-					const originalPrice = journey.price?.amount;
-
-					// Calculate effective price considering Deutschland-Ticket
-					// If user has Deutschland-Ticket (deutschlandTicketDiscount = true),
-					// check each leg and set price to 0 if eligible
-					let effectivePrice = originalPrice;
-
-					// Check if journey is Deutschland-Ticket eligible
-					if (searchParams.deutschlandTicketDiscount) {
-						// Check if all legs are Deutschland-Ticket eligible
-						const allLegsEligible = journey.legs.every((leg: JourneyLeg) => {
-							if (!leg.line) return true; // Walking legs don't count
-							return calculateLegPrice(leg, 1, true) === 0;
-						});
-
-						if (allLegsEligible) {
-							// Journey is covered by Deutschland-Ticket
-							effectivePrice = 0;
-							console.log(
-								`   Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`,
-							);
-						}
-					}
-
-					// If we still don't have a price and it's not Deutschland-Ticket eligible,
-					// treat it as a failed price fetch
-					if (effectivePrice === null || effectivePrice === undefined) {
-						// Last check: is it Deutschland-Ticket eligible even without API price?
-						if (searchParams.deutschlandTicketDiscount) {
-							const allLegsEligible = journey.legs.every((leg: JourneyLeg) => {
-								if (!leg.line) return true;
-								return calculateLegPrice(leg, 1, true) === 0;
-							});
-
-							if (allLegsEligible) {
-								console.log(
-									`   No API price but Deutschland-Ticket eligible: ${fromStationId} -> ${toStationId} (Price: 0 EUR)`,
-								);
-								return { price: 0, journey };
-							}
-						}
-						return { price: null, journey: null };
-					}
-
-					return { price: effectivePrice, journey };
-				}
-
-				return { price: null, journey: null };
-			} catch (error) {
-				console.error(
-					`Error fetching price for ${fromStationId} -> ${toStationId}:`,
-					error,
-				);
-				return { price: null, journey: null };
+function findStopoverDeparture(
+	journey: Journey,
+	stationId: string,
+): string | undefined {
+	for (const leg of journey.legs) {
+		if (!leg.stopovers) continue;
+		for (const s of leg.stopovers) {
+			if (s.stop?.id === stationId) {
+				return s.departure ?? s.plannedDeparture ?? undefined;
 			}
-		},
-		[baseUrl],
-	);
+		}
+	}
+	return undefined;
+}
 
-	/**
-	 * Main function to check for split ticket options
-	 */
+function findStopoverArrival(
+	journey: Journey,
+	stationId: string,
+): string | undefined {
+	for (const leg of journey.legs) {
+		if (!leg.stopovers) continue;
+		for (const s of leg.stopovers) {
+			if (s.stop?.id === stationId) {
+				return s.arrival ?? s.plannedArrival ?? undefined;
+			}
+		}
+	}
+	return undefined;
+}
+
+/**
+ * Returns the effective price of a journey in EUR, considering D-Ticket.
+ * Returns null if no price data was provided by the API.
+ */
+function getEffectivePrice(
+	journey: Journey,
+	hasDTicket: boolean,
+): number | null {
+	if (!journey.price) return null;
+	const amount = journey.price.amount;
+	if (!hasDTicket) return amount;
+	if (isFullJourneyDeutschlandTicketEligible(journey.legs)) return 0;
+	return amount;
+}
+
+/** Major hubs used for hub-aware second-leg search. */
+function extractHubs(journey: Journey): { id: string; name: string }[] {
+	const hubs: { id: string; name: string }[] = [];
+	for (let i = 0; i < journey.legs.length - 1; i++) {
+		const dest = journey.legs[i].destination;
+		if (dest.id && !hubs.find((h) => h.id === dest.id)) {
+			hubs.push({ id: dest.id, name: dest.name });
+		}
+	}
+	return hubs;
+}
+
+// ─── Initial state ────────────────────────────────────────────────────────────
+
+const INITIAL_RESULT: SplitTicketingResult = {
+	originalPrice: 0,
+	splits: [],
+	loading: false,
+	error: null,
+	checkedStations: 0,
+	totalStations: 0,
+	diagnostics: { missingFareStations: [], skipReasons: [] },
+};
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useSplit() {
+	const baseUrl = useApiBaseUrl();
+	const [result, setResult] = useState<SplitTicketingResult>(INITIAL_RESULT);
+	// Tracks the AbortController for any in-progress analysis so a new call can
+	// cancel the previous one and stop stale setResult calls from interleaving.
+	const abortRef = useRef<AbortController | null>(null);
+
 	const checkSplitOptions = useCallback(
-		async (journey: Journey, searchParams: JourneySearchParams) => {
-			console.log("=================================================");
-			console.log("STARTING SPLIT TICKETING ANALYSIS");
-			console.log("=================================================");
-
-			// Validate input
-			if (!journey.price?.amount) {
+		async (journey: Journey, params: JourneySearchParams) => {
+			// Cancel the previous run (aborts its fetch calls and marks it stale).
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+			const { signal } = controller;
+			const originalPrice = journey.price?.amount ?? null;
+			if (originalPrice === null) {
 				setResult({
-					originalPrice: 0,
-					splits: [],
-					loading: false,
-					error: "Journey has no price information",
-					checkedStations: 0,
-					totalStations: 0,
+					...INITIAL_RESULT,
+					error: "Für diese Verbindung wurden keine Ticketpreise geliefert.",
 				});
 				return;
 			}
 
-			const originalPrice = journey.price.amount;
-			const originalOrigin = journey.legs[0].origin;
-			const originalDestination =
-				journey.legs[journey.legs.length - 1].destination;
-			const originalDeparture =
-				journey.legs[0].departure || journey.legs[0].plannedDeparture;
+			const hasDTicket = !!params.deutschlandTicketDiscount;
+			const allowOtherTrains = !!params.splitAllowOtherTrains;
+			const maxDev = params.splitMaxArrivalDeviation ?? 60;
+			const STRICT_TOL = 3; // minutes
 
-			console.log(
-				`Original Journey: ${originalOrigin.name} -> ${originalDestination.name}`,
+			const originId = journey.legs[0].origin.id ?? "";
+			const destId = journey.legs[journey.legs.length - 1].destination.id ?? "";
+			const originalArrival =
+				arrivalOf(journey.legs[journey.legs.length - 1]) ?? "";
+
+			if (!originId || !destId || !originalArrival) {
+				setResult({
+					...INITIAL_RESULT,
+					error: "Verbindungsdaten unvollständig.",
+				});
+				return;
+			}
+
+			const candidates = extractSplitCandidates(
+				journey,
+				!!params.splitIncludeTransferStations,
 			);
-			console.log(`Original Price: ${(originalPrice / 100).toFixed(2)} EUR`);
-			console.log(`Departure: ${originalDeparture}`);
 
-			if (!originalDeparture) {
+			if (candidates.length === 0) {
 				setResult({
+					...INITIAL_RESULT,
 					originalPrice,
-					splits: [],
-					loading: false,
-					error: "Journey has no departure time",
 					checkedStations: 0,
 					totalStations: 0,
 				});
 				return;
 			}
 
-			// Extract all stopovers
-			const stopovers = extractStopovers(journey);
-			console.log(`\nFound ${stopovers.length} potential split points:`);
-			stopovers.forEach((stopover, idx) => {
-				console.log(`  ${idx + 1}. ${stopover.stop.name}`);
-			});
+			const hubs = extractHubs(journey);
 
-			if (stopovers.length === 0) {
-				console.log("No stopovers found - cannot check split options");
-				setResult({
-					originalPrice,
-					splits: [],
-					loading: false,
-					error: "No stopovers found in this journey",
-					checkedStations: 0,
-					totalStations: 0,
-				});
-				return;
-			}
-
-			console.log("\n-------------------------------------------------");
-			console.log("Starting split point analysis...");
-			console.log("-------------------------------------------------\n");
-
-			// Set loading state
 			setResult({
 				originalPrice,
 				splits: [],
 				loading: true,
 				error: null,
 				checkedStations: 0,
-				totalStations: stopovers.length,
+				totalStations: candidates.length,
+				diagnostics: { missingFareStations: [], skipReasons: [] },
 			});
 
-			const splitOptions: SplitOption[] = [];
-			let checkedCount = 0;
+			// Base query params shared across all fetch calls
+			const baseQs = new URLSearchParams();
+			if (params.age) baseQs.set("age", params.age);
+			if (params.loyaltyCard) baseQs.set("loyaltyCard", params.loyaltyCard);
+			if (params.firstClass) baseQs.set("firstClass", "true");
+			baseQs.set("tickets", "true");
+			baseQs.set("stopovers", "true");
 
-			// Check each stopover as a potential split point
-			for (const stopover of stopovers) {
-				const splitStation = stopover.stop;
+			const foundSplits: SplitOption[] = [];
+			const missingFareStations: string[] = [];
+			const skipMap = new Map<string, number>();
+			const skip = (reason: string) =>
+				skipMap.set(reason, (skipMap.get(reason) ?? 0) + 1);
 
-				console.log(
-					`\nChecking split point ${checkedCount + 1}/${stopovers.length}: ${
-						splitStation.name
-					}`,
-				);
-				console.log(
-					`   First leg:  ${originalOrigin.name} -> ${splitStation.name}`,
-				);
-				console.log(
-					`   Second leg: ${splitStation.name} -> ${originalDestination.name}`,
-				);
+			const originalDeparture = departureOf(journey.legs[0]) ?? "";
 
-				if (!splitStation.id || !originalOrigin.id || !originalDestination.id) {
-					console.log("   Missing station ID - skipping");
-					checkedCount++;
-					setResult((prev) => ({
-						...prev,
-						checkedStations: checkedCount,
-					}));
+			for (let i = 0; i < candidates.length; i++) {
+				if (signal.aborted) return;
+				const station = candidates[i];
+
+				setResult((prev) => ({ ...prev, checkedStations: i }));
+
+				const splitDeparture = findStopoverDeparture(journey, station.id);
+				if (!splitDeparture) {
+					skip("Keine Abfahrtszeit an Splitbahnhof");
 					continue;
 				}
 
-				try {
-					console.log("   Fetching prices for both legs...");
+				const splitArrivalAtStation = findStopoverArrival(journey, station.id);
 
-					// Fetch prices for both legs in parallel
-					const [firstLegResult, secondLegResult] = await Promise.all([
-						fetchJourneyPrice(
-							originalOrigin.id,
-							splitStation.id,
-							originalDeparture,
-							searchParams,
-						),
-						fetchJourneyPrice(
-							splitStation.id,
-							originalDestination.id,
-							stopover.departure ||
-								stopover.plannedDeparture ||
-								originalDeparture,
-							searchParams,
-						),
+				try {
+					// First leg: origin → splitStation
+					const qs1 = new URLSearchParams(baseQs);
+					qs1.set("from", originId);
+					qs1.set("to", station.id);
+					if (originalDeparture) qs1.set("departure", originalDeparture);
+
+					// Second leg: splitStation → destination (direct)
+					const qs2 = new URLSearchParams(baseQs);
+					qs2.set("from", station.id);
+					qs2.set("to", destId);
+					qs2.set("departure", splitDeparture);
+
+					// Hub-aware second-leg queries
+					const hubPromises = hubs
+						.filter((h) => h.id !== station.id)
+						.map((hub) => {
+							const qsHub = new URLSearchParams(qs2);
+							qsHub.set("via", hub.id);
+							return fetch(`${baseUrl}/journeys?${qsHub.toString()}`, {
+								signal,
+							});
+						});
+
+					const [res1, res2, ...hubRes] = await Promise.all([
+						fetch(`${baseUrl}/journeys?${qs1.toString()}`, { signal }),
+						fetch(`${baseUrl}/journeys?${qs2.toString()}`, { signal }),
+						...hubPromises,
 					]);
 
-					// Check if both legs have valid prices and journeys
-					if (
-						firstLegResult.price !== null &&
-						secondLegResult.price !== null &&
-						firstLegResult.journey &&
-						secondLegResult.journey
-					) {
-						// Validate timing: second leg must depart AFTER first leg arrives at the split station
-						const arrivalAtSplit = stopover.arrival || stopover.plannedArrival;
-						const secondLegFirstLeg = secondLegResult.journey.legs[0] as any;
-						const secondLegDeparture =
-							secondLegFirstLeg?.departure ||
-							secondLegFirstLeg?.plannedDeparture;
+					if (!res1.ok || !res2.ok) {
+						skip("API-Fehler");
+						continue;
+					}
 
-						if (arrivalAtSplit && secondLegDeparture) {
-							const arrivalTime = new Date(arrivalAtSplit).getTime();
-							const departureTime = new Date(secondLegDeparture).getTime();
+					const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
 
-							if (departureTime < arrivalTime) {
-								console.log(
-									`   INVALID CONNECTION: Second leg departs at ${secondLegDeparture} before first leg arrives at ${arrivalAtSplit} – skipping`,
-								);
-								checkedCount++;
-								setResult((prev) => ({
-									...prev,
-									checkedStations: checkedCount,
-								}));
+					// Collect all second-leg candidates (direct + hub-aware)
+					const hubDataArray: Journey[][] = await Promise.all(
+						hubRes.map((r) =>
+							r.ok
+								? r
+										.json()
+										.then((d: { journeys?: Journey[] }) => d.journeys ?? [])
+								: Promise.resolve([]),
+						),
+					);
+
+					const firstLegCandidates: Journey[] = data1.journeys ?? [];
+					const secondLegCandidates: Journey[] = [
+						...(data2.journeys ?? []),
+						...hubDataArray.flat(),
+					];
+
+					if (!firstLegCandidates.length) {
+						skip("Keine Verbindungen für erste Teilstrecke");
+						continue;
+					}
+					if (!secondLegCandidates.length) {
+						skip("Keine Verbindungen für zweite Teilstrecke");
+						continue;
+					}
+
+					// ── Find best first leg ──────────────────────────────────────────
+					let bestFirst: Journey | null = null;
+					const refArrival = splitArrivalAtStation ?? splitDeparture;
+
+					for (const j of firstLegCandidates) {
+						const arr = arrivalOf(j.legs[j.legs.length - 1]);
+						if (!arr) continue;
+						if (allowOtherTrains) {
+							// Must arrive before split departure; prefer latest arrival (min wait)
+							if (new Date(arr) > new Date(splitDeparture)) continue;
+							if (!bestFirst) {
+								bestFirst = j;
 								continue;
 							}
-						}
-
-						console.log(
-							`   Got prices: ${(firstLegResult.price / 100).toFixed(
-								2,
-							)} EUR + ${(secondLegResult.price / 100).toFixed(2)} EUR = ${(
-								(firstLegResult.price + secondLegResult.price) /
-								100
-							).toFixed(2)} EUR`,
-						);
-
-						const totalPrice = firstLegResult.price + secondLegResult.price;
-						const savings = originalPrice - totalPrice;
-
-						console.log(`   Split total: ${(totalPrice / 100).toFixed(2)} EUR`);
-						console.log(
-							`   Savings: ${(savings / 100).toFixed(2)} EUR (${(
-								(savings / originalPrice) *
-								100
-							).toFixed(1)}%)`,
-						);
-
-						// Only add if there are actual savings
-						if (savings > 0) {
-							console.log(`   VALID SPLIT FOUND! Adding to results.`);
-							splitOptions.push({
-								splitStation,
-								firstLegPrice: firstLegResult.price,
-								secondLegPrice: secondLegResult.price,
-								totalPrice,
-								savings,
-								savingsPercentage: (savings / originalPrice) * 100,
-								firstLegJourney: firstLegResult.journey,
-								secondLegJourney: secondLegResult.journey,
-							});
+							const prevArr = arrivalOf(
+								bestFirst.legs[bestFirst.legs.length - 1],
+							)!;
+							if (new Date(arr) > new Date(prevArr)) bestFirst = j;
 						} else {
-							console.log(`   No savings with this split - skipping`);
+							// Strict: must arrive within ±STRICT_TOL of original stopover arrival
+							if (Math.abs(diffMinutes(refArrival, arr)) > STRICT_TOL) continue;
+							if (!bestFirst) {
+								bestFirst = j;
+								continue;
+							}
+							const prevArr = arrivalOf(
+								bestFirst.legs[bestFirst.legs.length - 1],
+							)!;
+							if (
+								Math.abs(diffMinutes(refArrival, arr)) <
+								Math.abs(diffMinutes(refArrival, prevArr))
+							)
+								bestFirst = j;
 						}
-					} else {
-						console.log(
-							`   Could not fetch prices for one or both legs (First: ${
-								firstLegResult.price !== null ? "OK" : "FAILED"
-							}, Second: ${secondLegResult.price !== null ? "OK" : "FAILED"})`,
-						);
 					}
-				} catch (error) {
-					console.error(
-						`   Error checking split at ${splitStation.name}:`,
-						error,
+
+					if (!bestFirst) {
+						skip("Kein passender Zug für erste Teilstrecke");
+						continue;
+					}
+
+					const firstLegActualArrival = arrivalOf(
+						bestFirst.legs[bestFirst.legs.length - 1],
 					);
+					const firstFullyDTicket =
+						hasDTicket &&
+						isFullJourneyDeutschlandTicketEligible(bestFirst.legs);
+
+					// ── Find best second leg ─────────────────────────────────────────
+					let bestSecond: Journey | null = null;
+
+					for (const j of secondLegCandidates) {
+						const dep = departureOf(j.legs[0]);
+						const arr = arrivalOf(j.legs[j.legs.length - 1]);
+						if (!dep || !arr) continue;
+
+						// Must not depart before first leg arrives (transfer validity)
+						if (
+							firstLegActualArrival &&
+							new Date(dep) < new Date(firstLegActualArrival)
+						) {
+							skip("Unmöglicher Umstieg");
+							continue;
+						}
+
+						// Arrival check: one-directional – reject only if later than original beyond tolerance
+						const arrDiff = diffMinutes(originalArrival, arr); // positive = later
+						if (
+							arrDiff >
+							(allowOtherTrains || firstFullyDTicket ? maxDev : STRICT_TOL)
+						)
+							continue;
+
+						if (!allowOtherTrains && !firstFullyDTicket) {
+							// Strict: departure must also match within ±STRICT_TOL
+							if (Math.abs(diffMinutes(splitDeparture, dep)) > STRICT_TOL)
+								continue;
+						}
+
+						if (!bestSecond) {
+							bestSecond = j;
+							continue;
+						}
+						// Prefer cheapest
+						const prevPrice = bestSecond.price?.amount ?? Infinity;
+						const currPrice = j.price?.amount ?? Infinity;
+						if (currPrice < prevPrice) bestSecond = j;
+					}
+
+					if (!bestSecond) {
+						skip("Kein passender Zug für zweite Teilstrecke");
+						continue;
+					}
+
+					// ── Prices ───────────────────────────────────────────────────────
+					const firstPrice = getEffectivePrice(bestFirst, hasDTicket);
+					const secondPrice = getEffectivePrice(bestSecond, hasDTicket);
+
+					if (firstPrice === null || secondPrice === null) {
+						missingFareStations.push(station.name);
+						continue;
+					}
+
+					const totalSplitPrice = firstPrice + secondPrice;
+					const effectiveOriginal = hasDTicket
+						? (getEffectivePrice(journey, hasDTicket) ?? originalPrice)
+						: originalPrice;
+					const savings = effectiveOriginal - totalSplitPrice;
+
+					if (savings <= 0) {
+						skip("Keine Ersparnis");
+						continue;
+					}
+
+					const savingsPercentage =
+						effectiveOriginal > 0 ? (savings / effectiveOriginal) * 100 : 0;
+
+					console.log(
+						`[Split] ${station.name}: ${firstPrice.toFixed(2)} + ${secondPrice.toFixed(2)} = ${totalSplitPrice.toFixed(2)} € (−${savings.toFixed(2)} €, ${savingsPercentage.toFixed(1)}%)`,
+					);
+
+					foundSplits.push({
+						splitStation: station,
+						firstLegPrice: firstPrice,
+						secondLegPrice: secondPrice,
+						totalPrice: totalSplitPrice,
+						savings,
+						savingsPercentage,
+						firstLegJourney: bestFirst,
+						secondLegJourney: bestSecond,
+					});
+				} catch (err) {
+					if ((err as Error).name === "AbortError") return;
+					console.error(`[Split] Fehler bei ${station.name}:`, err);
+					skip("Netzwerkfehler");
 				}
-
-				checkedCount++;
-
-				// Update progress
-				setResult((prev) => ({
-					...prev,
-					checkedStations: checkedCount,
-					splits: [...splitOptions].sort((a, b) => b.savings - a.savings),
-				}));
 			}
 
-			// Sort by savings (highest first) and set final result
-			splitOptions.sort((a, b) => b.savings - a.savings);
+			foundSplits.sort((a, b) => b.savings - a.savings);
 
-			console.log("\n=================================================");
-			console.log("SPLIT TICKETING ANALYSIS COMPLETE");
-			console.log("=================================================");
-			console.log(`Checked: ${checkedCount} split points`);
-			console.log(`Found: ${splitOptions.length} money-saving options`);
-			if (splitOptions.length > 0) {
-				console.log(
-					`Best saving: ${(splitOptions[0].savings / 100).toFixed(2)} EUR at ${
-						splitOptions[0].splitStation.name
-					}`,
-				);
-			}
-			console.log("=================================================\n");
+			const skipReasons = Array.from(skipMap.entries())
+				.map(([reason, count]) => ({ reason, count }))
+				.sort((a, b) => b.count - a.count);
+
+			if (signal.aborted) return;
+
+			console.log(
+				`[Split] Abgeschlossen: ${foundSplits.length} Option(en), ${candidates.length} Stationen, ${missingFareStations.length} ohne Preis`,
+			);
 
 			setResult({
 				originalPrice,
-				splits: splitOptions,
+				splits: foundSplits,
 				loading: false,
 				error: null,
-				checkedStations: checkedCount,
-				totalStations: stopovers.length,
+				checkedStations: candidates.length,
+				totalStations: candidates.length,
+				diagnostics: { missingFareStations, skipReasons },
 			});
 		},
-		[extractStopovers, fetchJourneyPrice, baseUrl],
+		[baseUrl],
 	);
 
-	return {
-		result,
-		checkSplitOptions,
-	};
+	return { result, checkSplitOptions };
 }

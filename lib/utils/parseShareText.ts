@@ -13,35 +13,78 @@ export interface ParsedShareText {
  * Parst den menschenlesbaren „Verbindung Teilen"-Text der DB-App und extrahiert
  * Startbahnhof, Zielbahnhof und Abfahrtszeitpunkt.
  *
- * Erwartetes Format:
+ * Unterstützte Formate:
  *   Verbindung am Di. 02.12.2025
  *   • von Magdeburg Hbf, Abfahrt 15:01 Uhr Gl. 6 mit IC 2036
  *   • nach Oldenburg(Oldb)Hbf, Ankunft 18:23 Uhr Gl. 6 mit IC 2036
+ *
+ *   Magdeburg Hbf → Oldenburg(Oldb)Hbf
+ *   18.04.2026
+ *
+ *   IC 2034
+ *   Nach Norddeich
+ *   Ab 17:01 Magdeburg Hbf, Gleis 7
+ *   An 20:23 Oldenburg(Oldb)Hbf, Gleis 7
  */
 export function parseShareText(text: string): ParsedShareText {
-	// Datum aus "Verbindung am Di. 02.12.2025" (Wochentag-Abkürzung optional)
-	const dateMatch = text.match(
-		/Verbindung am \w+\.?\s+(\d{2})\.(\d{2})\.(\d{4})/,
-	);
-	// Origin aus "• von Magdeburg Hbf, Abfahrt 15:01 Uhr Gl. 6 mit IC 2036"
-	const originMatch = text.match(
+	// Datum aus "Verbindung am ... 02.12.2025" oder eigener Zeile "02.12.2025"
+	const dateMatch =
+		text.match(/Verbindung am(?:\s+[^\d\n]+)?\s+(\d{2})\.(\d{2})\.(\d{4})/) ||
+		text.match(/(?:^|\n)\s*(\d{2})\.(\d{2})\.(\d{4})\s*(?:\n|$)/);
+
+	// Legacy-Format mit Bullet-Points
+	const legacyOriginMatch = text.match(
 		/[•·]\s*von (.+?),\s*Abfahrt (\d{2}:\d{2}) Uhr(?:\s+Gl\.?\s*(\S+))?/,
 	);
-	// Destination aus "• nach Oldenburg(Oldb)Hbf, Ankunft 18:23 Uhr Gl. 6"
-	const destMatch = text.match(
+	const legacyDestMatch = text.match(
 		/[•·]\s*nach (.+?),\s*Ankunft(?:\s+(\d{2}:\d{2})\s+Uhr)?(?:\s+Gl\.?\s*(\S+))?/,
 	);
 
-	if (!dateMatch || !originMatch || !destMatch) {
+	// Neues Format mit Streckenzeile und Ab/An-Zeilen
+	const routeLineMatch = text.match(
+		/(?:^|\n)\s*(.+?)\s*(?:→|->)\s*(.+?)\s*(?:\n|$)/,
+	);
+	const departureLineMatch = text.match(
+		/(?:^|\n)\s*Ab\s+(\d{2}:\d{2})\s+(.+?)(?:,\s*(?:Gleis|Gl\.?)\s*([^\n,]+))?\s*(?:\n|$)/i,
+	);
+	const arrivalLineMatch = text.match(
+		/(?:^|\n)\s*An\s+(\d{2}:\d{2})\s+(.+?)(?:,\s*(?:Gleis|Gl\.?)\s*([^\n,]+))?\s*(?:\n|$)/i,
+	);
+
+	if (!dateMatch) {
+		throw new Error(
+			"Text konnte nicht geparst werden. Bitte stelle sicher, dass du den vollständigen DB-Teilen-Text eingefügt hast.",
+		);
+	}
+
+	let originName: string | undefined;
+	let destinationName: string | undefined;
+	let departureTime: string | undefined;
+	let arrivalTime: string | undefined;
+	let departurePlatform: string | undefined;
+	let arrivalPlatform: string | undefined;
+
+	if (legacyOriginMatch && legacyDestMatch) {
+		[, originName, departureTime, departurePlatform] = legacyOriginMatch;
+		[, destinationName, arrivalTime, arrivalPlatform] = legacyDestMatch;
+	} else if (departureLineMatch && arrivalLineMatch) {
+		// Wenn vorhanden, hat die Kopfzeile mit Pfeil Vorrang für Start/Ziel.
+		originName = routeLineMatch?.[1]?.trim() || departureLineMatch[2].trim();
+		destinationName = routeLineMatch?.[2]?.trim() || arrivalLineMatch[2].trim();
+		departureTime = departureLineMatch[1];
+		arrivalTime = arrivalLineMatch[1];
+		departurePlatform = departureLineMatch[3]?.trim();
+		arrivalPlatform = arrivalLineMatch[3]?.trim();
+	}
+
+	if (!originName || !destinationName || !departureTime) {
 		throw new Error(
 			"Text konnte nicht geparst werden. Bitte stelle sicher, dass du den vollständigen DB-Teilen-Text eingefügt hast.",
 		);
 	}
 
 	const [, day, month, year] = dateMatch;
-	const [, originName, time, departurePlatform] = originMatch;
-	const [, destinationName, arrivalTime, arrivalPlatform] = destMatch;
-	const [hours, minutes] = time.split(":").map(Number);
+	const [hours, minutes] = departureTime.split(":").map(Number);
 
 	const departure = new Date(
 		Number(year),
@@ -51,16 +94,32 @@ export function parseShareText(text: string): ParsedShareText {
 		minutes,
 	);
 
-	// Zugnamen aus allen Aufzählungszeilen extrahieren
+	// Zugnamen aus Legacy-Bullets und Standalone-Zugzeilen extrahieren.
 	const trainNames: string[] = [];
+	const addTrainName = (value: string) => {
+		const normalized = value.trim();
+		if (normalized && !trainNames.includes(normalized)) {
+			trainNames.push(normalized);
+		}
+	};
+
 	for (const line of text.split(/\r?\n/)) {
-		if (!/[•·]/.test(line)) continue;
-		const m = line.match(/\bmit\s+(.+?)\s*$/);
-		if (m) {
-			const name = m[1].trim();
-			if (name && !trainNames.includes(name)) {
-				trainNames.push(name);
-			}
+		const trimmed = line.trim();
+		if (!trimmed) continue;
+
+		const legacyTrainMatch = trimmed.match(/\bmit\s+(.+?)\s*$/i);
+		if (legacyTrainMatch) {
+			addTrainName(legacyTrainMatch[1]);
+			continue;
+		}
+
+		const standaloneTrainMatch = trimmed.match(
+			/^(ICE|IC|EC|RE|RB|IRE|MEX|S|U|NJ|EN|FLX)\s*([0-9][0-9A-Z]*)$/i,
+		);
+		if (standaloneTrainMatch) {
+			addTrainName(
+				`${standaloneTrainMatch[1].toUpperCase()} ${standaloneTrainMatch[2]}`,
+			);
 		}
 	}
 
@@ -68,7 +127,7 @@ export function parseShareText(text: string): ParsedShareText {
 		originName: originName.trim(),
 		destinationName: destinationName.trim(),
 		departure,
-		departureTime: time,
+		departureTime,
 		arrivalTime: arrivalTime || undefined,
 		departurePlatform: departurePlatform || undefined,
 		arrivalPlatform: arrivalPlatform || undefined,

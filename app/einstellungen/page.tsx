@@ -26,13 +26,14 @@ export default function EinstellungenPage() {
 	const [apiUrl, setApiUrl] = useState(DEFAULT_API_BASE_URL);
 	const [error, setError] = useState<string | null>(null);
 	const [saved, setSaved] = useState(false);
+	const [checking, setChecking] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		setApiUrl(getApiBaseUrl());
 	}, []);
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		const trimmed = apiUrl.trim().replace(/\/$/, "");
 		if (
 			trimmed &&
@@ -43,6 +44,23 @@ export default function EinstellungenPage() {
 				"Ungültige URL – kein Query-String, muss mit http(s):// beginnen",
 			);
 			return;
+		}
+		if (trimmed && trimmed !== DEFAULT_API_BASE_URL) {
+			setChecking(true);
+			setError(null);
+			try {
+				const res = await fetch(`${trimmed}/locations?query=Berlin&results=1`, {
+					signal: AbortSignal.timeout(5000),
+				});
+				if (!res.ok) throw new Error("not ok");
+				const data = await res.json();
+				if (!Array.isArray(data)) throw new Error("unexpected response");
+			} catch {
+				setError("Endpunkt nicht erreichbar oder ungültig");
+				setChecking(false);
+				return;
+			}
+			setChecking(false);
 		}
 		setError(null);
 		setApiBaseUrl(trimmed);
@@ -59,7 +77,7 @@ export default function EinstellungenPage() {
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") handleSave();
+		if (e.key === "Enter") void handleSave();
 	};
 
 	const isCustomUrl = apiUrl.trim().replace(/\/$/, "") !== DEFAULT_API_BASE_URL;
@@ -108,10 +126,11 @@ export default function EinstellungenPage() {
 					<div className="flex items-center gap-2 mt-1">
 						<button
 							type="button"
-							onClick={handleSave}
-							className="px-4 py-2 rounded-xl border-2 border-primary bg-primary text-white font-mono text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+							onClick={() => void handleSave()}
+							disabled={checking}
+							className="px-4 py-2 rounded-xl border-2 border-primary bg-primary text-white font-mono text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
 						>
-							Speichern
+							{checking ? "Wird geprüft…" : "Speichern"}
 						</button>
 
 						{isCustomUrl && (

@@ -64,14 +64,17 @@ function createBcParameter(
 }
 
 /**
- * Extracts the BahnCard code ("25" | "50" | null) from the loyaltyCard
- * search-param value used in this app (e.g. "bahncard25" → "25").
+ * Extracts the BahnCard discount number ("25", "50", "100", or null) from
+ * the loyaltyCard URL param. Handles both the legacy compact format
+ * ("bahncard25") and the current class-aware format ("bahncard-2nd-25").
  */
 export function bahnCardCodeFromLoyaltyCard(
 	loyaltyCard: string | undefined,
 ): string | null {
 	if (!loyaltyCard) return null;
-	const match = loyaltyCard.match(/bahncard(\d+)/i);
+	// Match the trailing digit sequence to support both "bahncard25" and
+	// "bahncard-1st-25" / "bahncard-2nd-50" etc.
+	const match = loyaltyCard.match(/(\d+)$/);
 	return match ? match[1] : null;
 }
 

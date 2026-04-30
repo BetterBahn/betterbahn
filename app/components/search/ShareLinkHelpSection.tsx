@@ -14,10 +14,10 @@ export function ShareLinkHelpSection() {
 					der Verbindung
 				</li>
 				<li>
-					Klicke auf <strong>„Verbindung Teilen"</strong>
+					Klicke auf <strong>&bdquo;Verbindung Teilen&ldquo;</strong>
 				</li>
 				<li>
-					Klicke auf <strong>„Infos Kopieren"</strong>
+					Klicke auf <strong>&bdquo;Infos Kopieren&ldquo;</strong>
 				</li>
 				<li>Füge den kompletten kopierten Text hier ein</li>
 			</ol>

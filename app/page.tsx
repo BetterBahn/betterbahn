@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import SearchContainer from "@/app/components/search/SearchContainer";
-import SearchResults from "@/app/components/search/searchResults";
+import ShareLinkInput from "@/app/components/search/ShareLinkInput";
 import Hero from "@/app/components/layout/heroImage";
 
 export default function Home() {
@@ -14,21 +13,8 @@ export default function Home() {
 					</div>
 				}
 			>
-				<SearchContainer />
+				<ShareLinkInput />
 			</Suspense>
-
-			{/* Journey Results displayed below search form */}
-			<div className="mt-8">
-				<Suspense
-					fallback={
-						<div className="flex justify-center items-center p-8">
-							<div className="text-lg font-mono">Lade Ergebnisse...</div>
-						</div>
-					}
-				>
-					<SearchResults />
-				</Suspense>
-			</div>
 		</main>
 	);
 }

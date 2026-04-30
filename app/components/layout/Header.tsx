@@ -6,7 +6,6 @@ import { usePwaInstall } from "@/lib/hooks/usePwaInstall";
 
 const NAV_ITEMS = [
 	{ label: "Infos", href: "/infos" },
-	{ label: "Unterstützen", href: "/unterstuetzen" },
 	{ label: "Einstellungen", href: "/einstellungen" },
 	{ label: "Impressum", href: "/impressum" },
 	{ label: "Datenschutz", href: "/datenschutz" },

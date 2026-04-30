@@ -34,7 +34,7 @@ export interface StopoverStation {
 		longitude: number;
 	};
 	priceCategory?: number;
-	[key: string]: any; // For additional properties
+	[key: string]: unknown;
 }
 
 export interface Stopover {
@@ -45,7 +45,7 @@ export interface Stopover {
 	departure?: string | null;
 	plannedDeparture?: string | null;
 	departureDelay?: number | null;
-	[key: string]: any; // For additional properties
+	[key: string]: unknown;
 }
 
 // Journey Types
@@ -70,6 +70,7 @@ export interface JourneyLeg {
 		type: string;
 		product?: string;
 		productName?: string;
+		fahrtNr?: string;
 	};
 	stopovers?: Stopover[];
 	remarks?: (string | Remark)[];
@@ -117,6 +118,12 @@ export interface JourneySearchParams {
 	firstClass?: boolean;
 	loyaltyCard?: string;
 	tickets?: boolean;
+	/** Include transfer stations (Umstiegsbahnhöfe) as split points (default false) */
+	splitIncludeTransferStations?: boolean;
+	/** Allow other trains in the split result (default false) */
+	splitAllowOtherTrains?: boolean;
+	/** Max arrival deviation in minutes when other trains are allowed (default 60) */
+	splitMaxArrivalDeviation?: number;
 }
 
 // Split Ticketing Types
@@ -132,6 +139,16 @@ export interface SplitOption {
 	secondLegJourney?: Journey;
 }
 
+export interface SplitSkipReason {
+	reason: string;
+	count: number;
+}
+
+export interface SplitDiagnostics {
+	missingFareStations: string[];
+	skipReasons: SplitSkipReason[];
+}
+
 export interface SplitTicketingResult {
 	originalPrice: number;
 	splits: SplitOption[];
@@ -139,4 +156,5 @@ export interface SplitTicketingResult {
 	error: string | null;
 	checkedStations: number;
 	totalStations: number;
+	diagnostics: SplitDiagnostics;
 }

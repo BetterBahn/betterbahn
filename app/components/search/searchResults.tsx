@@ -1,190 +1,128 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useJourneySearch } from "@/lib/hooks/useJourneySearch";
-import type { Journey, JourneyResponse } from "@/lib/types";
-import JourneyCard from "./JourneyCard";
-
-interface ShareMatchData {
-	departureTime: string;
-	arrivalTime?: string;
-	trainNames: string[];
-	departurePlatform?: string;
-	arrivalPlatform?: string;
-}
+import { useJourneyInfo } from "@/lib/context/journeyInfoContext";
+import JourneyDetail from "./JourneyDetail";
+import SplitAnalysisLoading from "./SplitAnalysisLoading";
+import type { Journey } from "@/lib/types";
 
 /**
- * Prüft, ob eine Journey mit den geparsten Share-Daten übereinstimmt.
- * Kriterien: Abfahrtszeit, Ankunftszeit, Zugnamen, Gleise.
+ * Score a journey against the matching params from the share-link URL.
+ * Higher score = better match. Matches train names against both line.name
+ * and line.fahrtNr to support plain train numbers (e.g. "11219").
  */
-function matchJourney(journey: Journey, matchData: ShareMatchData): boolean {
-	const firstLeg = journey.legs[0];
-	const lastLeg = journey.legs[journey.legs.length - 1];
+function scoreJourney(
+	journey: Journey,
+	matchTrains: string[],
+	matchArrivalTime: string | null,
+): number {
+	let score = 0;
 
-	// 1. Abfahrtszeit (HH:MM)
-	const depTime = firstLeg.plannedDeparture || firstLeg.departure;
-	if (!depTime) return false;
-	const depDate = new Date(depTime);
-	const depHHMM = `${String(depDate.getHours()).padStart(2, "0")}:${String(depDate.getMinutes()).padStart(2, "0")}`;
-	if (depHHMM !== matchData.departureTime) return false;
-
-	// 2. Ankunftszeit (HH:MM)
-	if (matchData.arrivalTime) {
-		const arrTime = lastLeg.plannedArrival || lastLeg.arrival;
-		if (arrTime) {
-			const arrDate = new Date(arrTime);
-			const arrHHMM = `${String(arrDate.getHours()).padStart(2, "0")}:${String(arrDate.getMinutes()).padStart(2, "0")}`;
-			if (arrHHMM !== matchData.arrivalTime) return false;
-		}
-	}
-
-	// 3. Zugnamen (alle aus dem Share-Text müssen in der Journey vorkommen)
-	if (matchData.trainNames.length > 0) {
-		const journeyTrainNames = journey.legs
+	if (matchTrains.length > 0) {
+		const journeyTrainIds = journey.legs
 			.filter((l) => l.line)
-			.map((l) => l.line!.name);
-		const allMatch = matchData.trainNames.every((tn) =>
-			journeyTrainNames.some((jtn) => jtn === tn),
-		);
-		if (!allMatch) return false;
-	}
+			.flatMap((l) =>
+				[l.line!.name, l.line!.fahrtNr].filter((v): v is string => !!v),
+			);
 
-	// 4. Abfahrtsgleis (nur ablehnen wenn API ein anderes Gleis meldet)
-	if (matchData.departurePlatform) {
-		const firstStopover = firstLeg.stopovers?.[0];
-		const apiPlatform =
-			firstStopover?.departurePlatform ??
-			firstStopover?.plannedDeparturePlatform;
-		if (apiPlatform && String(apiPlatform) !== matchData.departurePlatform) {
-			return false;
+		for (const candidate of matchTrains) {
+			if (
+				journeyTrainIds.some(
+					(id) =>
+						id.includes(candidate) ||
+						candidate.includes(id) ||
+						id === candidate,
+				)
+			) {
+				score += 10;
+			}
 		}
 	}
 
-	// 5. Ankunftsgleis
-	if (matchData.arrivalPlatform) {
-		const lastStopover = lastLeg.stopovers?.[lastLeg.stopovers.length - 1];
-		const apiPlatform =
-			lastStopover?.arrivalPlatform ?? lastStopover?.plannedArrivalPlatform;
-		if (apiPlatform && String(apiPlatform) !== matchData.arrivalPlatform) {
-			return false;
+	if (matchArrivalTime) {
+		const lastLeg = journey.legs[journey.legs.length - 1];
+		const arrival = lastLeg.arrival ?? lastLeg.plannedArrival;
+		if (arrival) {
+			const arrTime = new Date(arrival).toLocaleTimeString("de-DE", {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
+			if (arrTime === matchArrivalTime) score += 5;
 		}
 	}
 
-	return true;
+	return score;
 }
 
 export default function SearchResults() {
 	const { data, loading, error, searchParams } = useJourneySearch();
-	const [autoExpandIndex, setAutoExpandIndex] = useState<number | null>(null);
-	const [matchedIndices, setMatchedIndices] = useState<number[] | null>(null);
-	const lastProcessedData = useRef<JourneyResponse | null>(null);
+	const { setPrice } = useJourneyInfo();
+	const urlParams = useSearchParams();
 
-	console.log("Journey Search Data:", data);
+	const matchTrains = useMemo(() => {
+		const raw = urlParams.get("matchTrains");
+		return raw ? raw.split(",").filter(Boolean) : [];
+	}, [urlParams]);
 
-	// Nach dem Laden: Share-Match prüfen
-	useEffect(() => {
-		if (loading) {
-			setMatchedIndices(null);
-			setAutoExpandIndex(null);
-			return;
-		}
+	const matchArrivalTime = urlParams.get("matchArrivalTime");
 
-		if (!data?.journeys || data === lastProcessedData.current) return;
-		lastProcessedData.current = data;
+	// Find the journey that best matches the share-link criteria
+	const matchedJourney = useMemo<Journey | null>(() => {
+		if (!data?.journeys?.length) return null;
+		if (matchTrains.length === 0 && !matchArrivalTime) return data.journeys[0];
 
-		const matchDataStr = sessionStorage.getItem("shareMatchData");
-		if (!matchDataStr) {
-			setMatchedIndices(null);
-			setAutoExpandIndex(null);
-			return;
-		}
+		let best: Journey | null = null;
+		let bestScore = -1;
 
-		sessionStorage.removeItem("shareMatchData");
-
-		try {
-			const matchData: ShareMatchData = JSON.parse(matchDataStr);
-			const indices = data.journeys.reduce<number[]>((acc, journey, index) => {
-				if (matchJourney(journey, matchData)) acc.push(index);
-				return acc;
-			}, []);
-
-			if (indices.length === 1) {
-				// Genau 1 Treffer → direkt Split-Analyse starten
-				setMatchedIndices(indices);
-				setAutoExpandIndex(indices[0]);
-			} else if (indices.length > 1) {
-				// Mehrere Treffer → nur diese anzeigen, Nutzer wählt
-				setMatchedIndices(indices);
-				setAutoExpandIndex(null);
-			} else {
-				// Kein Treffer → alle anzeigen (Fallback)
-				setMatchedIndices(null);
-				setAutoExpandIndex(null);
+		for (const j of data.journeys) {
+			const s = scoreJourney(j, matchTrains, matchArrivalTime);
+			if (s > bestScore) {
+				bestScore = s;
+				best = j;
 			}
-		} catch {
-			setMatchedIndices(null);
-			setAutoExpandIndex(null);
 		}
-	}, [data, loading]);
 
-	// Loading state
+		return best ?? data.journeys[0];
+	}, [data, matchTrains, matchArrivalTime]);
+
+	// Sync the matched journey's price into the context so SearchContextBar can display it
+	useEffect(() => {
+		setPrice(matchedJourney?.price ?? null);
+		return () => setPrice(null);
+	}, [matchedJourney, setPrice]);
+
 	if (loading) {
-		return (
-			<div className="flex justify-center items-center p-8">
-				<div className="text-lg font-mono">Suche Verbindungen...</div>
-			</div>
-		);
+		return <SplitAnalysisLoading checkedStations={0} totalStations={0} />;
 	}
 
-	// Error state
 	if (error) {
 		return (
-			<div className="p-4 bg-red-100 border-2 border-red-500 rounded-lg">
-				<p className="text-red-700 font-mono">Fehler: {error}</p>
+			<div
+				role="alert"
+				className="p-4 mt-6 bg-red-50 border-2 border-red-200 rounded-2xl font-mono text-sm text-red-700"
+			>
+				{error}
 			</div>
 		);
 	}
 
-	// No results yet
-	if (!data || !data.journeys || data.journeys.length === 0) {
+	if (!data || data.journeys.length === 0) {
 		return (
-			<div className="p-4 text-center font-mono text-gray-600">
+			<p className="py-8 text-center font-mono text-gray-500">
 				Keine Verbindungen gefunden.
-			</div>
+			</p>
 		);
 	}
 
-	// Gefilterte oder alle Verbindungen anzeigen
-	const journeysToShow = matchedIndices
-		? matchedIndices.map((i) => ({
-				journey: data.journeys[i],
-				originalIndex: i,
-			}))
-		: data.journeys.map((journey, index) => ({
-				journey,
-				originalIndex: index,
-			}));
+	if (!matchedJourney) {
+		return (
+			<p className="py-8 text-center font-mono text-gray-500">
+				Keine passende Verbindung gefunden.
+			</p>
+		);
+	}
 
-	// Display results
-	return (
-		<div className="w-full ">
-			<h2 className="text-xl mb-6 font-bold font-mono ">
-				{matchedIndices?.length === 1
-					? "Deine Verbindung"
-					: `${journeysToShow.length} Verbindung${journeysToShow.length !== 1 ? "en" : ""} gefunden`}
-			</h2>
-
-			<div className="flex flex-col gap-4">
-				{journeysToShow.map(({ journey, originalIndex }) => (
-					<JourneyCard
-						key={originalIndex}
-						journey={journey}
-						index={originalIndex}
-						searchParams={searchParams}
-						autoExpand={autoExpandIndex === originalIndex}
-					/>
-				))}
-			</div>
-		</div>
-	);
+	return <JourneyDetail journey={matchedJourney} searchParams={searchParams} />;
 }

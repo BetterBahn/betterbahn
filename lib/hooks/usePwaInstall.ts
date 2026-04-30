@@ -10,7 +10,12 @@ interface BeforeInstallPromptEvent extends Event {
 export function usePwaInstall() {
 	const [installPrompt, setInstallPrompt] =
 		useState<BeforeInstallPromptEvent | null>(null);
-	const [isInstalled, setIsInstalled] = useState(false);
+	// Lazy initializer: reads matchMedia synchronously on first render so there
+	// is no false → true transition that would cause cascading renders.
+	const [isInstalled, setIsInstalled] = useState<boolean>(() => {
+		if (typeof window === "undefined") return false;
+		return window.matchMedia("(display-mode: standalone)").matches;
+	});
 
 	useEffect(() => {
 		// Register service worker
@@ -18,11 +23,6 @@ export function usePwaInstall() {
 			navigator.serviceWorker.register("/sw.js").catch(() => {
 				// SW registration failed silently – app still works
 			});
-		}
-
-		// Check if already running as installed PWA
-		if (window.matchMedia("(display-mode: standalone)").matches) {
-			setIsInstalled(true);
 		}
 
 		const handleBeforeInstallPrompt = (e: Event) => {

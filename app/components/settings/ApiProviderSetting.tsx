@@ -26,6 +26,7 @@ export default function ApiProviderSetting() {
 	const [value, setValue] = useState(DEFAULT_API_BASE_URL);
 	const [error, setError] = useState<string | null>(null);
 	const [saved, setSaved] = useState(false);
+	const [checking, setChecking] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const panelRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +43,7 @@ export default function ApiProviderSetting() {
 		}
 	}, [open]);
 
-	const commit = (url: string) => {
+	const commit = async (url: string): Promise<boolean> => {
 		const trimmed = url.trim().replace(/\/$/, "");
 		if (
 			trimmed &&
@@ -54,6 +55,22 @@ export default function ApiProviderSetting() {
 			);
 			return false;
 		}
+		if (trimmed && trimmed !== DEFAULT_API_BASE_URL) {
+			setChecking(true);
+			try {
+				const res = await fetch(`${trimmed}/locations?query=Berlin&results=1`, {
+					signal: AbortSignal.timeout(5000),
+				});
+				if (!res.ok) throw new Error("not ok");
+				const data = await res.json();
+				if (!Array.isArray(data)) throw new Error("unexpected response");
+			} catch {
+				setError("Endpunkt nicht erreichbar oder ungültig");
+				setChecking(false);
+				return false;
+			}
+			setChecking(false);
+		}
 		setError(null);
 		setApiBaseUrl(trimmed);
 		setSaved(true);
@@ -61,15 +78,15 @@ export default function ApiProviderSetting() {
 		return true;
 	};
 
-	const closePanel = () => {
-		if (commit(value)) setOpen(false);
+	const closePanel = async () => {
+		if (await commit(value)) setOpen(false);
 	};
 
 	// Close panel (and save) when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (e: MouseEvent) => {
 			if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-				closePanel();
+				void closePanel();
 			}
 		};
 		if (open) document.addEventListener("mousedown", handleClickOutside);
@@ -78,14 +95,14 @@ export default function ApiProviderSetting() {
 	}, [open, value]);
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") closePanel();
+		if (e.key === "Enter") void closePanel();
 		else if (e.key === "Escape") setOpen(false);
 	};
 
 	const handleReset = () => {
 		setValue(DEFAULT_API_BASE_URL);
 		setError(null);
-		commit(DEFAULT_API_BASE_URL);
+		void commit(DEFAULT_API_BASE_URL);
 	};
 
 	const isCustomUrl = value !== DEFAULT_API_BASE_URL;
@@ -149,7 +166,15 @@ export default function ApiProviderSetting() {
 						}`}
 					/>
 
-					{error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+					{checking && (
+						<p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+							<span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-primary rounded-full animate-spin" />
+							Endpunkt wird geprüft…
+						</p>
+					)}
+					{!checking && error && (
+						<p className="text-xs text-red-500 mt-1">{error}</p>
+					)}
 
 					<div className="flex items-center justify-between mt-3">
 						{isCustomUrl ? (

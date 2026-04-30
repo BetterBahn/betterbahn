@@ -10,6 +10,9 @@ export interface ShareSearchOptions {
 	hasDTicket?: boolean;
 	trainClass?: string;
 	bahncard?: string;
+	splitIncludeTransferStations?: boolean;
+	splitAllowOtherTrains?: boolean;
+	splitMaxArrivalDeviation?: number;
 }
 
 export type ShareSearchStatus = "idle" | "resolving" | "error";
@@ -64,10 +67,12 @@ export function useShareLinkSearch() {
 					);
 				}
 
-				// 3. URL-Params setzen (gleiche Logik wie searchForm.tsx)
+				// 3. URL-Params setzen
 				const params = new URLSearchParams();
 				params.set("from", fromId);
 				params.set("to", toId);
+				params.set("fromName", parsed.originName);
+				params.set("toName", parsed.destinationName);
 				params.set("departure", parsed.departure.toISOString());
 
 				if (options.age) params.set("age", options.age);
@@ -77,28 +82,31 @@ export function useShareLinkSearch() {
 					params.set("loyaltyCard", `bahncard${options.bahncard}`);
 				}
 
+				// Split settings
+				if (options.splitIncludeTransferStations)
+					params.set("splitIncludeTransferStations", "true");
+				if (options.splitAllowOtherTrains) {
+					params.set("splitAllowOtherTrains", "true");
+					params.set(
+						"splitMaxArrivalDeviation",
+						String(options.splitMaxArrivalDeviation ?? 60),
+					);
+				}
+
 				// Always request tickets info
 				params.set("tickets", "true");
 
-				// Match-Daten für automatische Erkennung in den Ergebnissen speichern
-				if (typeof window !== "undefined") {
-					sessionStorage.setItem(
-						"shareMatchData",
-						JSON.stringify({
-							departureTime: parsed.departureTime,
-							arrivalTime: parsed.arrivalTime,
-							trainNames: parsed.trainNames,
-							departurePlatform: parsed.departurePlatform,
-							arrivalPlatform: parsed.arrivalPlatform,
-						}),
-					);
-				}
+				// Match-Daten als URL-Params kodieren, damit sie einen Refresh überleben
+				if (parsed.arrivalTime)
+					params.set("matchArrivalTime", parsed.arrivalTime);
+				if (parsed.trainNames.length > 0)
+					params.set("matchTrains", parsed.trainNames.join(","));
 
 				// Status zurücksetzen bevor Navigation
 				setStatus("idle");
 
 				// useJourneySearch reagiert automatisch auf URL-Änderung
-				router.push(`/?${params.toString()}`, { scroll: false });
+				router.push(`/journey/?${params.toString()}`);
 			} catch (err) {
 				setError(err instanceof Error ? err.message : "Unbekannter Fehler");
 				setStatus("error");

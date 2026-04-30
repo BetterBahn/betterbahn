@@ -27,7 +27,7 @@ export default function ImpressumPage() {
 					<br />
 					inh. Lukas Weihrauch
 					<br />
-					c/o Postflex ##9347
+					c/o Postflex #9347
 					<br />
 					Emsdettener Str. 10
 					<br />

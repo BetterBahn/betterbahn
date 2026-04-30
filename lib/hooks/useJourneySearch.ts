@@ -23,6 +23,14 @@ export function useJourneySearch() {
 		firstClass: urlSearchParams.get("firstClass") === "true",
 		loyaltyCard: urlSearchParams.get("loyaltyCard") || undefined,
 		tickets: true,
+		splitIncludeTransferStations:
+			urlSearchParams.get("splitIncludeTransferStations") === "true",
+		splitAllowOtherTrains:
+			urlSearchParams.get("splitAllowOtherTrains") === "true",
+		splitMaxArrivalDeviation: (() => {
+			const raw = Number(urlSearchParams.get("splitMaxArrivalDeviation"));
+			return isNaN(raw) || raw === 0 ? 60 : Math.max(1, Math.min(240, raw));
+		})(),
 	};
 
 	useEffect(() => {
