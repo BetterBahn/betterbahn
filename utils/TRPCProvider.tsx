@@ -28,8 +28,12 @@ export const trpc = createTRPCReact<AppRouter>();
 
 const trpcClient = trpc.createClient({
 	links: [
-		// adds pretty logs to your console in development and logs errors in production
-		loggerLink(),
+		loggerLink({
+			enabled: (opts) =>
+				process.env.NODE_ENV === "development" &&
+				(opts.direction === "up" ||
+					(opts.direction === "down" && opts.result instanceof Error)),
+		}),
 		splitLink({
 			// uses the httpSubscriptionLink for subscriptions
 			condition: (op) => op.type === "subscription",

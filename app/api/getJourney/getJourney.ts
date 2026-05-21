@@ -24,6 +24,13 @@ export const getJourney = t.procedure
 		const vbidRequest = await fetchAndValidateJson({
 			url: `https://www.bahn.de/web/api/angebote/verbindung/${input.vbid}`,
 			schema: vbidSchema,
+			headers: {
+				"User-Agent":
+					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+				Referer: "https://www.bahn.de/",
+				Origin: "https://www.bahn.de",
+				"Accept-Language": "de-DE,de;q=0.9",
+			},
 		});
 
 		const cookies = vbidRequest.response.headers.getSetCookie();

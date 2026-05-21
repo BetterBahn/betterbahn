@@ -9,7 +9,9 @@ import { useUrlParams } from "./useUrlParams";
 
 export const DiscountContent = () => {
 	const params = useUrlParams();
-	const journeysQuery = trpc.getJourney.useQuery(params);
+	const journeysQuery = trpc.getJourney.useQuery(params, {
+		enabled: !!params.vbid && !Number.isNaN(params.travelClass),
+	});
 
 	const [analysisProgress, setAnalysisProgress] = useState<Progress | null>(
 		null

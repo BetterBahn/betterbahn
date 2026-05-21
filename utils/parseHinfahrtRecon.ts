@@ -117,6 +117,11 @@ export const parseHinfahrtReconWithAPI = async (
 		headers: {
 			"Content-Type": "application/json",
 			Cookie: cookies.join("; "),
+			"User-Agent":
+				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+			Referer: "https://www.bahn.de/",
+			Origin: "https://www.bahn.de",
+			"Accept-Language": "de-DE,de;q=0.9",
 		},
 		body: {
 			klasse: "KLASSE_2",
