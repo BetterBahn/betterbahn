@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 					className={`${geistSans.variable} ${geistMono.variable} antialiased container mx-auto px-2 py-6`}
 				>
 					<Navbar />
-					{children}
+					<main>{children}</main>
 				</body>
 			</html>
 		</TRPCReactProvider>

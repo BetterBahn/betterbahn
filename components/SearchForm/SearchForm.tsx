@@ -64,6 +64,9 @@ export const SearchForm = () => {
 				<URLInput url={url} setUrl={setUrl} />
 				<div className="flex flex-col md:flex-row gap-8">
 					<select
+						id="bahnCard"
+						name="bahnCard"
+						aria-label="BahnCard"
 						value={bahnCard}
 						onChange={(e) => setBahnCard(e.target.value)}
 						className="w-full px-3 py-2 resize-vertical border-b-2 border-gray-300 focus:ring-2 focus:ring-primary"
@@ -79,15 +82,21 @@ export const SearchForm = () => {
 						</option>
 					</select>
 					<input
+						id="passengerAge"
+						name="passengerAge"
 						type="number"
 						value={passengerAge}
 						onChange={(e) => setPassengerAge(e.target.value)}
 						placeholder="Alter des Reisenden"
+						aria-label="Alter des Reisenden"
 						min="0"
 						max="120"
 						className="w-full px-3 py-2 resize-vertical border-b-2 border-gray-300 focus:ring-2 focus:ring-primary"
 					/>
 					<select
+						id="hasDeutschlandTicket"
+						name="hasDeutschlandTicket"
+						aria-label="Deutschlandticket"
 						value={String(hasDeutschlandTicket)}
 						onChange={(e) => setHasDeutschlandTicket(e.target.value === "true")}
 						className="w-full px-3 py-2 resize-vertical border-b-2 border-gray-300 focus:ring-2 focus:ring-primary"
@@ -100,6 +109,9 @@ export const SearchForm = () => {
 						</option>
 					</select>
 					<select
+						id="travelClass"
+						name="travelClass"
+						aria-label="Reiseklasse"
 						value={String(travelClass)}
 						onChange={(e) => setTravelClass(e.target.value)}
 						className="w-full px-3 py-2 resize-vertical border-b-2 border-gray-300 focus:ring-2 focus:ring-primary"
