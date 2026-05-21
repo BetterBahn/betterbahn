@@ -8,7 +8,30 @@ import { data as loyaltyCards } from "db-vendo-client/format/loyalty-cards";
 import { profile as dbProfile } from "db-vendo-client/p/db/index";
 import { prettifyError, z } from "zod/v4";
 
-export const dbClient = createClient(dbProfile, "mail@lukasweihrauch.de");
+const BROWSER_UA =
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+export const dbClient = createClient(
+	{
+		...dbProfile,
+		transformReq: (_ctx: unknown, reqOptions: Record<string, unknown>) => ({
+			...reqOptions,
+			headers: {
+				...(reqOptions.headers as Record<string, string>),
+				Referer: "https://www.bahn.de/",
+				Origin: "https://www.bahn.de",
+				"sec-ch-ua":
+					'"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+				"sec-ch-ua-mobile": "?0",
+				"sec-ch-ua-platform": '"macOS"',
+				"sec-fetch-dest": "empty",
+				"sec-fetch-mode": "cors",
+				"sec-fetch-site": "cross-site",
+			},
+		}),
+	},
+	BROWSER_UA
+);
 
 export const getJourney = t.procedure
 	.input(

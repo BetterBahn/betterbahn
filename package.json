@@ -6,13 +6,13 @@
   "packageManager": "pnpm@11.1.1",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "DB_PROFILE=db next dev",
+    "build": "DB_PROFILE=db next build",
+    "start": "DB_PROFILE=db next start",
     "deploy": "docker build",
     "oxlint": "oxlint",
-    "electron:dev": "concurrently -n \"next,electron\" -c \"cyan,green\" \"next dev\" \"wait-on http://localhost:3000 && electron electron/main.js\"",
-    "electron:dist": "next build && node electron/prepare-build.js && electron-builder --mac --publish never"
+    "electron:dev": "concurrently -n \"next,electron\" -c \"cyan,green\" \"DB_PROFILE=db next dev\" \"wait-on http://localhost:3000 && electron electron/main.js\"",
+    "electron:dist": "DB_PROFILE=db next build && node electron/prepare-build.js && electron-builder --mac --publish never"
   },
   "build": {
     "appId": "com.betterbahn.app",
