@@ -28,13 +28,21 @@
       {
         "from": ".next/standalone",
         "to": "server",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "mac": {
       "category": "public.app-category.travel",
       "target": [
-        { "target": "dmg", "arch": ["arm64", "x64"] }
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
       ]
     },
     "dmg": {
@@ -49,7 +57,7 @@
     "@trpc/server": "^11.8.0",
     "@trpc/tanstack-react-query": "^11.16.0",
     "db-hafas-stations": "^2.0.0",
-    "db-vendo-client": "^6.10.8",
+    "db-vendo-client": "^6.10.11",
     "next": "16.2.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.3",
