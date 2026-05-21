@@ -2,6 +2,7 @@
   "name": "db_ticket",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "packageManager": "pnpm@11.1.1",
   "license": "AGPL-3.0-only",
   "scripts": {
@@ -9,7 +10,36 @@
     "build": "next build",
     "start": "next start",
     "deploy": "docker build",
-    "oxlint": "oxlint"
+    "oxlint": "oxlint",
+    "electron:dev": "concurrently -n \"next,electron\" -c \"cyan,green\" \"next dev\" \"wait-on http://localhost:3000 && electron electron/main.js\"",
+    "electron:dist": "next build && node electron/prepare-build.js && electron-builder --mac --publish never"
+  },
+  "build": {
+    "appId": "com.betterbahn.app",
+    "productName": "BetterBahn",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "server",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.travel",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "dmg": {
+      "title": "BetterBahn"
+    }
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.20",
@@ -30,9 +60,13 @@
     "@types/node": "25.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.2.1",
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1",
     "oxlint": "^1.43.0",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
+    "wait-on": "^9.0.10",
     "zod": "^4.1.13"
   },
   "devEngines": {

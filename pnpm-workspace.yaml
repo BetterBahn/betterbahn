@@ -1,5 +1,6 @@
 allowBuilds:
   "@tailwindcss/oxide": true
+  electron-winstaller: true
   puppeteer: true
   sharp: true
 onlyBuiltDependencies:
