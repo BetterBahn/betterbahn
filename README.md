@@ -63,7 +63,7 @@ You can run the app with docker compose:
 
 ## Installation Guides
 
-For detailed installation instructions on different platforms please refer to the [Wiki](../../wiki/Installation-documentation---Dokumentation-zur-Installation):
+For detailed installation instructions on different platforms please refer to the [Wiki](../../wiki/Installation-documentation---Dokumentation-zur-Installation)
 
 ## License
 
