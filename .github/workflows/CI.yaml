@@ -33,7 +33,7 @@ jobs:
           # Dereference pnpm links so extracted ZIPs work with standard unzip tools.
           rsync -aL node_modules/.pnpm/node_modules/ app-build/node_modules/
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: build
           path: app-build
