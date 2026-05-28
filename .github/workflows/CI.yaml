@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: "25"
       - name: Install modules
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --reporter=silent
       - name: Run Typecheck
         run: pnpm tsc
       - name: Run Oxlint
@@ -32,14 +32,9 @@ jobs:
           rsync -aL node_modules/.pnpm/db-hafas-stations@2.0.0/ app-build/node_modules/.pnpm/db-hafas-stations@2.0.0/
           # Dereference pnpm links so extracted ZIPs work with standard unzip tools.
           rsync -aL node_modules/.pnpm/node_modules/ app-build/node_modules/
-      - name: Create build.zip
-        run: |
-          rm -f build.zip
-          cd app-build
-          zip -r ../build.zip .
-      - name: Upload build.zip artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v6
         with:
-          name: build-zip
-          path: build.zip
+          name: build
+          path: app-build
           if-no-files-found: error
