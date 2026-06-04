@@ -1,4 +1,8 @@
+allowBuilds:
+  "@tailwindcss/oxide": true
+  puppeteer: true
+  sharp: true
 onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
+  - "@tailwindcss/oxide"
   - puppeteer
   - sharp

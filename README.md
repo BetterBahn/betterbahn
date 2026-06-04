@@ -63,12 +63,7 @@ You can run the app with docker compose:
 
 ## Installation Guides
 
-For detailed installation instructions on different platforms:
-
-- [Windows Installation (DE)](docs/Windows-Installation-de.md)
-- [Linux Installation (DE)](docs/Linux-Installation-de.md)
-- [Windows Installation (EN)](docs/Windows-Installation-en.md)
-- [Linux Installation (EN)](docs/Linux-Installation-en.md)
+For detailed installation instructions on different platforms please refer to the [Wiki](../../wiki/Installation-documentation---Dokumentation-zur-Installation)
 
 ## License
 

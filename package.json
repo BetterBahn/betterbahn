@@ -2,6 +2,7 @@
   "name": "db_ticket",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.1.1",
   "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "next dev",
@@ -13,21 +14,21 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.20",
     "@trpc/client": "^11.9.0",
-    "@trpc/next": "^11.9.0",
-    "@trpc/react-query": "^11.7.2",
+    "@trpc/next": "^11.16.0",
+    "@trpc/react-query": "^11.16.0",
     "@trpc/server": "^11.8.0",
-    "@trpc/tanstack-react-query": "^11.9.0",
+    "@trpc/tanstack-react-query": "^11.16.0",
     "db-hafas-stations": "^2.0.0",
     "db-vendo-client": "^6.10.8",
-    "next": "16.1.6",
-    "react": "^19.2.3",
+    "next": "16.2.6",
+    "react": "^19.2.4",
     "react-dom": "^19.2.3",
     "superjson": "^2.2.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "25.0.1",
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "oxlint": "^1.43.0",
     "tailwindcss": "^4.1.18",
@@ -37,9 +38,8 @@
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "10.15.0",
+      "version": "11.1.1",
       "onFail": "download"
     }
-  },
-  "packageManager": "pnpm@10.19.0"
+  }
 }
