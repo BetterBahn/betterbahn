@@ -19,10 +19,11 @@ export const useUrlParams = () => {
 		? Number.parseInt(passengerAgeParam, 10)
 		: undefined;
 
+	const bahnCardParam = searchParams.get("bahnCard");
+	const bahnCard = bahnCardParam !== null ? Number.parseInt(bahnCardParam, 10) : null;
+
 	return {
-		bahnCard: searchParams.has("bahnCard")
-			? Number.parseInt(searchParams.get("bahnCard")!, 10)
-			: null,
+		bahnCard,
 		vbid,
 		travelClass,
 		hasDeutschlandTicket: searchParams.get("hasDeutschlandTicket") === "true",

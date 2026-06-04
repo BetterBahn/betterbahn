@@ -24,25 +24,30 @@ export const DiscountContent = () => {
 	);
 
 	useEffect(() => {
-		if (journeysQuery.isSuccess && journeysQuery.data.length > 0) {
-			const journey = journeysQuery.data[0];
-			const firstLeg = journey.legs.at(0);
-			const lastLeg = journey.legs.at(-1);
+		if (!journeysQuery.isSuccess) return;
 
-			if (firstLeg?.origin?.name && lastLeg?.destination?.name) {
-				addToHistory({
-					vbid: params.vbid,
-					origin: firstLeg.origin.name,
-					destination: lastLeg.destination.name,
-					departureDate: firstLeg.departure.toISOString(),
-					price: journey.price?.amount ?? null,
-					travelClass: params.travelClass,
-					passengerAge: params.passengerAge,
-					bahnCard: params.bahnCard,
-					hasDeutschlandTicket: params.hasDeutschlandTicket,
-				});
-			}
-		}
+		const journey = journeysQuery.data[0];
+		if (!journey) return;
+
+		const firstLeg = journey.legs.at(0);
+		const lastLeg = journey.legs.at(-1);
+
+		const origin = firstLeg?.origin?.name;
+		const destination = lastLeg?.destination?.name;
+
+		if (!origin || !destination) return;
+
+		addToHistory({
+			vbid: params.vbid,
+			origin,
+			destination,
+			departureDate: firstLeg.departure.toISOString(),
+			price: journey.price?.amount ?? null,
+			travelClass: params.travelClass,
+			passengerAge: params.passengerAge,
+			bahnCard: params.bahnCard,
+			hasDeutschlandTicket: params.hasDeutschlandTicket,
+		});
 	}, [
 		journeysQuery.isSuccess,
 		journeysQuery.data,

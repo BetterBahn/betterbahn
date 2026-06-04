@@ -133,11 +133,7 @@ export const SearchForm = () => {
 				</div>
 			)}
 
-			<SearchHistory
-				history={history}
-				onRemove={removeFromHistory}
-				onClear={clearHistory}
-			/>
+			{history.length > 0 && <SearchHistory history={history} onRemove={removeFromHistory} onClear={clearHistory} />}
 		</section>
 	);
 };

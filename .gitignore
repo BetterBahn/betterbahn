@@ -18,8 +18,3 @@ dist/
 
 # TypeScript
 /tsconfig.tsbuildinfo
-
-# Different package managers
-bun.lock
-package-lock.json
-yarn.lock

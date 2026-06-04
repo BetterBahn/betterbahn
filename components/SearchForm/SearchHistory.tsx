@@ -1,7 +1,6 @@
 "use client";
 
 import { formatPriceDE } from "@/utils/priceUtils";
-import { useRouter } from "next/navigation";
 import { type SearchHistoryItem } from "./useSearchHistory";
 
 interface SearchHistoryProps {
@@ -10,54 +9,37 @@ interface SearchHistoryProps {
 	onClear: () => void;
 }
 
+const buildUrl = (item: SearchHistoryItem) => {
+	const params = new URLSearchParams({ vbid: item.vbid });
+	if (item.travelClass !== undefined) params.set("travelClass", item.travelClass.toString());
+	if (item.passengerAge !== undefined) params.set("passengerAge", item.passengerAge.toString());
+	if (item.bahnCard !== null && item.bahnCard !== undefined) params.set("bahnCard", item.bahnCard.toString());
+	if (item.hasDeutschlandTicket) params.set("hasDeutschlandTicket", "true");
+	return `/discount?${params.toString()}`;
+};
+
+const formatDate = (dateString: string) => {
+	const date = new Date(dateString);
+	return date.toLocaleDateString("de-DE", {
+		day: "2-digit",
+		month: "2-digit",
+		year: "numeric",
+	});
+};
+
+const formatSavedDate = (timestamp: number) => {
+	const date = new Date(timestamp);
+	return date.toLocaleDateString("de-DE", {
+		day: "2-digit",
+		month: "2-digit",
+	});
+};
+
 export const SearchHistory = ({
 	history,
 	onRemove,
 	onClear,
 }: SearchHistoryProps) => {
-	const router = useRouter();
-
-	if (history.length === 0) {
-		return null;
-	}
-
-	const handleClick = (item: SearchHistoryItem) => {
-		const params = new URLSearchParams({
-			vbid: item.vbid,
-		});
-
-		if (item.travelClass !== undefined) {
-			params.set("travelClass", item.travelClass.toString());
-		}
-		if (item.passengerAge !== undefined) {
-			params.set("passengerAge", item.passengerAge.toString());
-		}
-		if (item.bahnCard !== undefined && item.bahnCard !== null) {
-			params.set("bahnCard", item.bahnCard.toString());
-		}
-		if (item.hasDeutschlandTicket) {
-			params.set("hasDeutschlandTicket", "true");
-		}
-
-		router.push(`/discount?${params.toString()}`);
-	};
-
-	const formatDate = (dateString: string) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString("de-DE", {
-			day: "2-digit",
-			month: "2-digit",
-			year: "numeric",
-		});
-	};
-
-	const formatSavedDate = (timestamp: number) => {
-		const date = new Date(timestamp);
-		return date.toLocaleDateString("de-DE", {
-			day: "2-digit",
-			month: "2-digit",
-		});
-	};
 
 	return (
 		<div className="mt-12 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -76,18 +58,12 @@ export const SearchHistory = ({
 
 			<div className="grid gap-3">
 				{history.map((item, index) => (
-					<div
+					<a
 						key={`${item.vbid}-${index}`}
 						role="button"
 						tabIndex={0}
+						href={buildUrl(item)}
 						className="group relative bg-background border border-foreground/20 rounded-lg p-4 hover:shadow-md hover:border-primary/50 transition-all duration-200 cursor-pointer"
-						onClick={() => handleClick(item)}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.preventDefault();
-								handleClick(item);
-							}
-						}}
 					>
 						<div className="flex items-center justify-between">
 							<div className="flex-1 min-w-0">
@@ -96,7 +72,7 @@ export const SearchHistory = ({
 										{item.origin}
 									</span>
 									<svg
-										className="w-4 h-4 text-foreground/50 flex-shrink-0"
+										className="w-4 h-4 text-foreground/50 shrink-0"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -152,7 +128,7 @@ export const SearchHistory = ({
 								</svg>
 							</button>
 						</div>
-					</div>
+					</a>
 				))}
 			</div>
 		</div>

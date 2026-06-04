@@ -20,15 +20,12 @@ export const useSearchHistory = () => {
 	const [history, setHistory] = useState<SearchHistoryItem[]>([]);
 
 	useEffect(() => {
-		if (typeof window === "undefined") return;
-
 		const stored = localStorage.getItem(STORAGE_KEY);
-		if (stored) {
-			try {
-				setHistory(JSON.parse(stored));
-			} catch {
-				setHistory([]);
-			}
+
+		try {
+			setHistory(stored ? JSON.parse(stored) : []);
+		} catch {
+			setHistory([]);
 		}
 	}, []);
 
