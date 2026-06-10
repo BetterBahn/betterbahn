@@ -3,6 +3,11 @@
 BetterBahn is a web app for finding the best train journeys in Germany. While split ticketing is supported to help save money, it is rather the exception. The app will be extended with many more features in the future.
 You can find out more about the project on our [website](https://betterbahn.de).
 
+> [!WARNING]
+> It seems like Deutsche Bahn has introduced a change that prevents Betterbahn from working.
+> This causes the error `ENOTFOUND app.vendo.noncd.db.de`.
+> See https://github.com/BetterBahn/betterbahn/issues/225 for more details.
+
 ## Technology
 
 This project uses the [db-vendo-client](https://github.com/public-transport/db-vendo-client) for accessing Deutsche Bahn ticketing data, which is licensed under the ISC License.
