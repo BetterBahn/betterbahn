@@ -87,13 +87,14 @@ const _parseHinfahrtRecon = (hinfahrtRecon: string) => {
 };
 
 const reconLegSchema = z.object({
+	// Walking segments or transfers can legitimately have no stops.
 	halte: z
 		.array(
 			z.object({
 				id: z.string(),
 			})
 		)
-		.min(0), // Allow empty arrays for walking segments or transfers
+		.min(0),
 });
 
 const reconResponseSchema = z.object({
@@ -110,13 +111,17 @@ export const parseHinfahrtReconWithAPI = async (
 	vbidResponse: VbidSchema,
 	cookies: string[]
 ) => {
+	const cookieHeader = cookies
+		.map((cookie) => cookie.split(";", 1)[0])
+		.join("; ");
+
 	return await fetchAndValidateJson({
 		url: "https://www.bahn.de/web/api/angebote/recon",
 		schema: reconResponseSchema,
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
-			Cookie: cookies.join("; "),
+			Cookie: cookieHeader,
 		},
 		body: {
 			klasse: "KLASSE_2",

@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "deploy": "docker build",
-    "oxlint": "oxlint"
+    "oxlint": "oxlint",
+    "test": "node --test --experimental-strip-types utils/bahnApiFetch.test.cjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.20",
@@ -19,8 +20,9 @@
     "@trpc/server": "^11.8.0",
     "@trpc/tanstack-react-query": "^11.16.0",
     "db-hafas-stations": "^2.0.0",
-    "db-vendo-client": "^6.10.8",
+    "db-vendo-client": "^6.11.3",
     "next": "16.2.11",
+    "node-fetch": "2.7.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.3",
     "superjson": "^2.2.6"
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "25.0.1",
+    "@types/node-fetch": "^2.6.13",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "oxlint": "^1.43.0",

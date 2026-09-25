@@ -1,4 +1,5 @@
 import { fetchAndValidateJson } from "@/utils/fetchAndValidateJson";
+import { withBahnAgent } from "@/utils/bahnApiFetch";
 import { parseHinfahrtReconWithAPI } from "@/utils/parseHinfahrtRecon";
 import { vbidSchema, vendoJourneySchema } from "@/utils/schemas";
 import { t } from "@/utils/trpc-init";
@@ -8,7 +9,10 @@ import { data as loyaltyCards } from "db-vendo-client/format/loyalty-cards";
 import { profile as dbProfile } from "db-vendo-client/p/db/index";
 import { prettifyError, z } from "zod/v4";
 
-export const dbClient = createClient(dbProfile, "mail@lukasweihrauch.de");
+export const dbClient = createClient(
+	{ ...(dbProfile as object), transformReq: withBahnAgent },
+	"mail@lukasweihrauch.de"
+);
 
 export const getJourney = t.procedure
 	.input(
@@ -26,7 +30,7 @@ export const getJourney = t.procedure
 			schema: vbidSchema,
 		});
 
-		const cookies = vbidRequest.response.headers.getSetCookie();
+		const cookies = vbidRequest.response.headers.raw()["set-cookie"] ?? [];
 		const { data } = await parseHinfahrtReconWithAPI(vbidRequest.data, cookies);
 
 		// Find first segment with halte data for start station
@@ -61,11 +65,14 @@ export const getJourney = t.procedure
 			stopovers: true,
 			// Bei genauer Abfahrtszeit wollen wir exakte Treffer, nicht verschiedene Alternativen
 			notOnlyFastRoutes: true,
-			remarks: true, // Verbindungshinweise einschließen
-			transfers: -1, // System entscheidet über optimale Anzahl Umstiege
+			// Verbindungshinweise einschließen
+			remarks: true,
+			// System entscheidet über optimale Anzahl Umstiege
+			transfers: -1,
 			// Reiseklasse-Präferenz setzen - verwende firstClass boolean Parameter
-			firstClass: input.travelClass === 1, // true für erste Klasse, false für zweite Klasse
-			age: input.passengerAge, // Passagieralter für angemessene Preisgestaltung hinzufügen
+			firstClass: input.travelClass === 1,
+			// Passagieralter für angemessene Preisgestaltung hinzufügen
+			age: input.passengerAge,
 			departure: new Date(vbidRequest.data.hinfahrtDatum),
 		};
 
@@ -80,7 +87,8 @@ export const getJourney = t.procedure
 		if (input.hasDeutschlandTicket) {
 			options.deutschlandTicketDiscount = true;
 			// Diese Option kann helfen, genauere Preise zurückzugeben wenn Deutschland-Ticket verfügbar ist
-			options.deutschlandTicketConnectionsOnly = false; // Wir wollen alle Verbindungen, aber mit genauen Preisen
+			// Wir wollen alle Verbindungen, aber mit genauen Preisen
+			options.deutschlandTicketConnectionsOnly = false;
 		}
 
 		const journeys = await dbClient.journeys(
