@@ -215,7 +215,7 @@ importers:
         version: 11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3)
       '@trpc/next':
         specifier: ^11.16.0
-        version: 11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/react-query@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(react@19.2.4)(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(next@16.4.0(@types/node@25.0.1)(react-dom@19.2.3(react@19.2.4))(react@19.2.4))(react-dom@19.2.3(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+        version: 11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/react-query@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(react@19.2.4)(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(next@16.4.0(@types/node@26.6.5)(react-dom@19.2.3(react@19.2.4))(react@19.2.4))(react-dom@19.2.3(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       '@trpc/react-query':
         specifier: ^11.16.0
         version: 11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(react@19.2.4)(typescript@5.9.3)
@@ -233,7 +233,7 @@ importers:
         version: 6.10.8
       next:
         specifier: 16.4.0
-        version: 16.4.0(@types/node@25.0.1)(react-dom@19.2.3(react@19.2.4))(react@19.2.4)
+        version: 16.4.0(@types/node@26.6.5)(react-dom@19.2.3(react@19.2.4))(react@19.2.4)
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -248,8 +248,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       '@types/node':
-        specifier: 25.0.1
-        version: 25.0.1
+        specifier: 26.6.5
+        version: 26.6.5
       '@types/react':
         specifier: ^19.2.14
         version: 19.2.14
@@ -707,8 +707,8 @@ packages:
       react: '>=18.2.0'
       typescript: '>=5.7.2'
 
-  '@types/node@25.0.1':
-    resolution: {integrity: sha512-czWPzKIAXucn9PtsttxmumiQ9N0ok9FrBwgRWrwmVLlp86BrMExzvXRLFYRJ+Ex3g6yqj+KuaxfX1JTgV2lpfg==}
+  '@types/node@26.6.5':
+    resolution: {integrity: sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -1111,8 +1111,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  undici-types@7.16.0:
-    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -1400,11 +1400,11 @@ snapshots:
       '@trpc/server': 11.19.0(typescript@5.9.3)
       typescript: 5.9.3
 
-  '@trpc/next@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/react-query@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(react@19.2.4)(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(next@16.4.0(@types/node@25.0.1)(react-dom@19.2.3(react@19.2.4))(react@19.2.4))(react-dom@19.2.3(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
+  '@trpc/next@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/react-query@11.16.0(@tanstack/react-query@5.90.20(react@19.2.4))(@trpc/client@11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(react@19.2.4)(typescript@5.9.3))(@trpc/server@11.19.0(typescript@5.9.3))(next@16.4.0(@types/node@26.6.5)(react-dom@19.2.3(react@19.2.4))(react@19.2.4))(react-dom@19.2.3(react@19.2.4))(react@19.2.4)(typescript@5.9.3)':
     dependencies:
       '@trpc/client': 11.9.0(@trpc/server@11.19.0(typescript@5.9.3))(typescript@5.9.3)
       '@trpc/server': 11.19.0(typescript@5.9.3)
-      next: 16.4.0(@types/node@25.0.1)(react-dom@19.2.3(react@19.2.4))(react@19.2.4)
+      next: 16.4.0(@types/node@26.6.5)(react-dom@19.2.3(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.3(react@19.2.4)
       typescript: 5.9.3
@@ -1432,9 +1432,9 @@ snapshots:
       react: 19.2.4
       typescript: 5.9.3
 
-  '@types/node@25.0.1':
+  '@types/node@26.6.5':
     dependencies:
-      undici-types: 7.16.0
+      undici-types: 8.9.0
 
   '@types/react-dom@19.2.3(@types/react@19.2.14)':
     dependencies:
@@ -1639,7 +1639,7 @@ snapshots:
       split2: 3.2.2
       through2: 4.0.2
 
-  next@16.4.0(@types/node@25.0.1)(react-dom@19.2.3(react@19.2.4))(react@19.2.4):
+  next@16.4.0(@types/node@26.6.5)(react-dom@19.2.3(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.4.0
       '@swc/helpers': 0.5.23
@@ -1658,7 +1658,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.4.0
       '@next/swc-win32-arm64-msvc': 16.4.0
       '@next/swc-win32-x64-msvc': 16.4.0
-      sharp: 0.35.5(@types/node@25.0.1)
+      sharp: 0.35.5(@types/node@26.6.5)
     transitivePeerDependencies:
       - '@babel/core'
       - '@types/node'
@@ -1723,7 +1723,7 @@ snapshots:
   semver@7.8.5:
     optional: true
 
-  sharp@0.35.5(@types/node@25.0.1):
+  sharp@0.35.5(@types/node@26.6.5):
     dependencies:
       '@img/colour': 1.1.0
       detect-libc: 2.1.2
@@ -1754,7 +1754,7 @@ snapshots:
       '@img/sharp-win32-arm64': 0.35.5
       '@img/sharp-win32-ia32': 0.35.5
       '@img/sharp-win32-x64': 0.35.5
-      '@types/node': 25.0.1
+      '@types/node': 26.6.5
     optional: true
 
   side-channel-list@1.0.0:
@@ -1822,7 +1822,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  undici-types@7.16.0: {}
+  undici-types@8.9.0: {}
 
   util-deprecate@1.0.2: {}
 
